@@ -10,7 +10,7 @@ hitstop_event = pygame.event.Event(HITSTOP)
 hitboxes = []
 
 WIDTH, HEIGHT = 1920, 1080
-SCREEN = pygame.display.set_mode((WIDTH/1.5, HEIGHT/1.5))
+SCREEN = pygame.display.set_mode((WIDTH/1.5,HEIGHT/1.5))
 WIN = pygame.surface.Surface((WIDTH, HEIGHT))
 FPS = 60
 
@@ -62,10 +62,16 @@ class Circle:
         self.rect.clamp_ip(WIN.get_rect())
     def gravity(self):
         self.yvel += GRAVITY
-    def move_left(self, vel):
-        self.xvel = -vel
-    def move_right(self, vel):
-        self.xvel = vel
+    def move_back(self, vel):
+        if self.direction == 'right':
+            self.xvel = -vel
+        else:
+            self.xvel = vel
+    def move_forward(self, vel):
+        if self.direction == 'right':
+            self.xvel = vel
+        else:
+            self.xvel = -vel
     def jump(self, jumpheight):
         self.yvel = -jumpheight
     def loop(self, thingy):
@@ -133,10 +139,7 @@ class forwardWalk:
             return Idle()
         
     def update(self, character, inputs):
-        if character.direction == 'right':
-            character.move_right(SPEED)
-        else:
-            character.move_left(SPEED)
+        character.move_forward(SPEED)
 class backWalk:
     def enter_state(self, character, inputs):
 
@@ -152,10 +155,7 @@ class backWalk:
             return Idle()
 
     def update(self, character, inputs):
-        if character.direction == 'right':
-            character.move_left(SPEED)
-        else:
-            character.move_right(SPEED)
+        character.move_back(SPEED)
 class Jump:
 
     def __init__(self):
@@ -166,16 +166,12 @@ class Jump:
         if character.rect.y == HEIGHT - character.height:
             return Idle()
         if 'up' in inputs.currentInput and not character.IsJump and (self.release_received == True):
-            if character.direction == 'right':
-                if 'right' in inputs.currentInput:
-                    character.move_right(SPEED)
-                elif 'left' in inputs.currentInput:
-                    character.move_left(SPEED)
-            else:
-                if 'right' in inputs.currentInput:
-                    character.move_left(SPEED)
-                elif 'left' in inputs.currentInput:
-                    character.move_right(SPEED)
+
+            if 'right' in inputs.currentInput:
+                character.move_forward(SPEED)
+            elif 'left' in inputs.currentInput:
+                character.move_back(SPEED)
+
             character.jump(JUMP)
             return doubleJump()
         
