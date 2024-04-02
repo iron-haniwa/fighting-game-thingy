@@ -1,4 +1,5 @@
 import pygame, sys, random, colour
+from inputreaderthing import inputReader
 pygame.init()
 pygame.font.init()
 
@@ -13,7 +14,8 @@ SCREEN = pygame.display.set_mode((WIDTH/1.5, HEIGHT/1.5))
 WIN = pygame.surface.Surface((WIDTH, HEIGHT))
 FPS = 60
 
-SPEED = 30
+SPEED = 15
+FRICTION = 1
 
 BLACK = (0,0,0)
 YELLOW = (255, 255, 0)
@@ -37,7 +39,7 @@ class Circle:
     def __init__(self, xpos, ypos):
         self.height = 300
         self.width = 200
-
+        self.inputBuffer = inputReader()
         self.rect = pygame.Rect(xpos,ypos, self.width, self.height)
         self.xvel = 0
         self.yvel = 0
@@ -46,9 +48,11 @@ class Circle:
         self.index = 0
         self.state = Idle()
         self.direction = 'right'
+            
+
 
     def change_state(self):
-        new_state = self.state.enter_state(self)
+        new_state = self.state.enter_state(self, self.inputBuffer)
         if new_state: self.state = new_state
         else: self.state
 
@@ -65,6 +69,8 @@ class Circle:
     def jump(self, jumpheight):
         self.yvel = -jumpheight
     def loop(self, thingy):
+        self.inputBuffer.handleInputs(self.direction)
+        #print(self.inputBuffer.currentInput)
         if self.rect.y > HEIGHT - 300:
             self.IsJump = True
         else: self.IsJump = False
@@ -75,7 +81,7 @@ class Circle:
         
         self.movement(self.xvel,self.yvel)
         self.change_state()
-        self.state.update(self)
+        self.state.update(self, self.inputBuffer)
         #print(self.direction)
     def draw(self):
         pygame.draw.rect(WIN, PURPLE, self.rect)
@@ -96,61 +102,99 @@ class Circle:
 
 
 class Idle:
-    def enter_state(self, character):
-        if keys[pygame.K_RIGHT]:
+    def enter_state(self, character, inputs):
+        if inputs.currentInput == ['right']:
             return forwardWalk()
-        if keys[pygame.K_LEFT]:
+        if inputs.currentInput == ['left']:
             return backWalk()
-        if keys[pygame.K_SPACE] and not character.IsJump:
+        if 'up' in inputs.currentInput and not character.IsJump:
+            inputs.inputBuffer[-1].append('jumped')
             character.jump(JUMP)
             return Jump()
-    def update(self, character):
-        character.xvel = 0
+    def update(self, character, inputs):
+        if abs(character.xvel) > 0:
+            if character.xvel > 0:
+                character.xvel -= FRICTION
+            elif character.xvel < 0:
+                character.xvel += FRICTION
         character.gravity()
 class forwardWalk:
-    def enter_state(self, character):
-
-        if not keys[pygame.K_RIGHT]:
-            return Idle()
-        elif keys[pygame.K_SPACE] and not character.IsJump:
+    def enter_state(self, character, inputs):
+        if 'up' in inputs.currentInput and not character.IsJump:
+            inputs.inputBuffer[-1].append('jumped')
             character.jump(JUMP)
             return Jump()
-    def update(self, character):
-        character.move_right(SPEED/2)
+
+        if inputs.currentInput != ['right']:
+            if character.direction == 'right':
+                character.xvel -= SPEED
+            else:
+                character.xvel += SPEED
+            return Idle()
+        
+    def update(self, character, inputs):
+        if character.direction == 'right':
+            character.move_right(SPEED)
+        else:
+            character.move_left(SPEED)
 class backWalk:
-    def enter_state(self, character):
+    def enter_state(self, character, inputs):
 
-        if not keys[pygame.K_LEFT]:
-            return Idle()
-        elif keys[pygame.K_SPACE] and not character.IsJump:
+        if 'up' in inputs.currentInput and not character.IsJump:
             character.jump(JUMP)
             return Jump()
-    def update(self, character):
-        character.move_left(SPEED/2)
+
+        if inputs.currentInput != ['left']:
+            if character.direction == 'right':
+                character.xvel += SPEED
+            else:
+                character.xvel -= SPEED
+            return Idle()
+
+    def update(self, character, inputs):
+        if character.direction == 'right':
+            character.move_left(SPEED)
+        else:
+            character.move_right(SPEED)
 class Jump:
-    def enter_state(self, character):
+
+    def __init__(self):
+        self.release_received = False
+
+    def enter_state(self, character, inputs):
 
         if character.rect.y == HEIGHT - character.height:
             return Idle()
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    if keys[pygame.K_LEFT]:
-                        character.move_left(SPEED/2)
-                    elif keys[pygame.K_RIGHT]:
-                        character.move_right(SPEED/2)
-                    character.jump(JUMP/1.2)
-                    return doubleJump()
-    def update(self, character): 
+        if 'up' in inputs.currentInput and not character.IsJump and (self.release_received == True):
+            if character.direction == 'right':
+                if 'right' in inputs.currentInput:
+                    character.move_right(SPEED)
+                elif 'left' in inputs.currentInput:
+                    character.move_left(SPEED)
+            else:
+                if 'right' in inputs.currentInput:
+                    character.move_left(SPEED)
+                elif 'left' in inputs.currentInput:
+                    character.move_right(SPEED)
+            character.jump(JUMP)
+            return doubleJump()
+        
+    def update(self, character, inputs): 
         #print(character.yvel)
         character.gravity()
+        print(self.release_received)
+        if '-up' in inputs.inputBuffer[-1][0]:
+            print('waaw')
+            self.release_received = True
+
+
 class doubleJump:
-    def enter_state(self, character):
+    def enter_state(self, character, inputs):
         
         if character.rect.y == HEIGHT - 300:
             return Idle()
         
-    def update(self, character): 
+    def update(self, character, inputs): 
         #print(character.yvel)
         character.gravity()
 
@@ -159,13 +203,13 @@ class Hitstun:
         self.timer = 0
         character.xvel = -knockback
         character.yvel = 0
-    def enter_state(self, character):
+    def enter_state(self, character, *args):
         if self.timer == 20:
             if character.rect.y == HEIGHT - 300:
                 return Idle()
             else:
                 return Jump()
-    def update(self, character):
+    def update(self, character, inputs):
         if character.rect.y == HEIGHT - 300:
             if abs(character.xvel) != 0:
                 if character.xvel > 0:
@@ -183,7 +227,7 @@ class Hitstun:
         self.timer += 1 
 
 class Hitbox:
-    def __init__(self, knockback):
+    def __init__(self, knockback,):
         self.rect = pygame.Rect(1300, (HEIGHT)-200, 100, 100)
         self.damage = None
         self.kb = knockback
@@ -265,7 +309,7 @@ def main():
                 hitstopTimer = 0
                 hitstop = False
             #print(hitstop)
-        print(hitstop_len)
+        #sdprint(hitstop_len)
         draw(player, hitboxes, thingy)
  
         clock.tick(FPS)
