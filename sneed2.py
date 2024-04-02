@@ -14,6 +14,8 @@ SCREEN = pygame.display.set_mode((WIDTH/1.5,HEIGHT/1.5))
 WIN = pygame.surface.Surface((WIDTH, HEIGHT))
 FPS = 60
 
+FLOOR = HEIGHT - 100
+
 SPEED = 15
 FRICTION = 1
 
@@ -59,7 +61,9 @@ class Circle:
     def movement(self, dx, dy):
         self.rect.x += dx
         self.rect.y += dy
-        self.rect.clamp_ip(WIN.get_rect())
+        if self.rect.bottom > FLOOR:
+            print('whar')
+            self.rect.bottom = FLOOR
     def gravity(self):
         self.yvel += GRAVITY
     def move_back(self, vel):
@@ -75,9 +79,10 @@ class Circle:
     def jump(self, jumpheight):
         self.yvel = -jumpheight
     def loop(self, thingy):
+        
         self.inputBuffer.handleInputs(self.direction)
         #print(self.inputBuffer.currentInput)
-        if self.rect.y > HEIGHT - 300:
+        if self.rect.bottom > FLOOR:
             self.IsJump = True
         else: self.IsJump = False
         if self.rect.centerx - thingy.rect.centerx > 0:
@@ -163,7 +168,7 @@ class Jump:
 
     def enter_state(self, character, inputs):
 
-        if character.rect.y == HEIGHT - character.height:
+        if character.rect.bottom == FLOOR:
             return Idle()
         if 'up' in inputs.currentInput and not character.IsJump and (self.release_received == True):
 
@@ -187,7 +192,7 @@ class Jump:
 class doubleJump:
     def enter_state(self, character, inputs):
         
-        if character.rect.y == HEIGHT - 300:
+        if character.rect.bottom == FLOOR:
             return Idle()
         
     def update(self, character, inputs): 
