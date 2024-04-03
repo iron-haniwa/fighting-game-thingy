@@ -1,5 +1,5 @@
 import pygame, sys, random, colour
-from inputreaderthing import inputReader
+from inputreaderthing import inputReader, specialMove
 pygame.init()
 pygame.font.init()
 
@@ -14,10 +14,23 @@ SCREEN = pygame.display.set_mode((WIDTH/1.5,HEIGHT/1.5))
 WIN = pygame.surface.Surface((WIDTH, HEIGHT))
 FPS = 60
 
+bg_image = pygame.transform.scale(pygame.image.load("wafflehousenight.webp").convert_alpha(), (WIDTH*2,HEIGHT*2))
+bg_rect = bg_image.get_rect()
+bg_rect.centerx = WIN.get_rect().centerx
+bg_rect.bottom = WIN.get_rect().bottom
+
 FLOOR = HEIGHT - 100
 
 SPEED = 15
 FRICTION = 1
+
+player_1_controls = [pygame.K_s,
+                    pygame.K_w,
+                    pygame.K_a,
+                    pygame.K_d,
+                    pygame.K_u,
+                    pygame.K_i,
+                    pygame.K_o]
 
 BLACK = (0,0,0)
 YELLOW = (255, 255, 0)
@@ -34,14 +47,15 @@ blue = colour.Color(rgb=(1,0,1))
 color = list(red.range_to(blue, 100))
 
 
-class Circle:
+class Player:
 
     
 
-    def __init__(self, xpos, ypos):
-        self.height = 300
-        self.width = 200
-        self.inputBuffer = inputReader()
+    def __init__(self, xpos, ypos, controls):
+        self.height = 400
+        self.width = 250
+        self.controls = controls
+        self.inputBuffer = inputReader(controls)
         self.rect = pygame.Rect(xpos,ypos, self.width, self.height)
         self.xvel = 0
         self.yvel = 0
@@ -50,8 +64,13 @@ class Circle:
         self.index = 0
         self.state = Idle()
         self.direction = 'right'
-            
-
+        self.moveReader = specialMove
+        self.dashLimit = 2
+        self.amountDashed = 0
+        self.jumpLimit = 3
+        self.jumpCount = 0
+         
+    
 
     def change_state(self):
         new_state = self.state.enter_state(self, self.inputBuffer)
@@ -62,7 +81,7 @@ class Circle:
         self.rect.x += dx
         self.rect.y += dy
         if self.rect.bottom > FLOOR:
-            print('whar')
+            #print('whar')
             self.rect.bottom = FLOOR
     def gravity(self):
         self.yvel += GRAVITY
@@ -78,10 +97,23 @@ class Circle:
             self.xvel = -vel
     def jump(self, jumpheight):
         self.yvel = -jumpheight
-    def loop(self, thingy):
+
+    def process_inputs(self):
+        move = self.moveReader.commandReader(self, self.inputBuffer.inputBuffer)
+
+        if move == 'Dash' and isinstance(self.state, Jump):
+            #print('guh')
+            if self.amountDashed < self.dashLimit:
+                self.xvel += 10
+                self.yvel -= GRAVITY*4
+
+    def loop(self, thingy, keys):
         
-        self.inputBuffer.handleInputs(self.direction)
-        #print(self.inputBuffer.currentInput)
+
+        self.inputBuffer.handleInputs(self.direction, keys)
+        self.process_inputs()  
+        #print(self.state)
+        #print(self.jumpCount)
         if self.rect.bottom > FLOOR:
             self.IsJump = True
         else: self.IsJump = False
@@ -94,8 +126,8 @@ class Circle:
         self.change_state()
         self.state.update(self, self.inputBuffer)
         #print(self.direction)
-    def draw(self):
-        pygame.draw.rect(WIN, PURPLE, self.rect)
+    def draw(self, window):
+        pygame.draw.rect(window, PURPLE, self.rect)
 
 
     
@@ -114,15 +146,17 @@ class Circle:
 
 class Idle:
     def enter_state(self, character, inputs):
-        if inputs.currentInput == ['right']:
+        if 'right' in inputs.currentInput:
             return forwardWalk()
-        if inputs.currentInput == ['left']:
+        if 'left' in inputs.currentInput:
             return backWalk()
         if 'up' in inputs.currentInput and not character.IsJump:
             inputs.inputBuffer[-1].append('jumped')
-            character.jump(JUMP)
-            return Jump()
+            return preJump()
     def update(self, character, inputs):
+        character.amountDashed = 0
+        character.jumpCount = 0
+        #print('guh')
         if abs(character.xvel) > 0:
             if character.xvel > 0:
                 character.xvel -= FRICTION
@@ -132,9 +166,7 @@ class Idle:
 class forwardWalk:
     def enter_state(self, character, inputs):
         if 'up' in inputs.currentInput and not character.IsJump:
-            inputs.inputBuffer[-1].append('jumped')
-            character.jump(JUMP)
-            return Jump()
+            return preJump()
 
         if inputs.currentInput != ['right']:
             if character.direction == 'right':
@@ -149,8 +181,8 @@ class backWalk:
     def enter_state(self, character, inputs):
 
         if 'up' in inputs.currentInput and not character.IsJump:
-            character.jump(JUMP)
-            return Jump()
+            
+            return preJump()
 
         if inputs.currentInput != ['left']:
             if character.direction == 'right':
@@ -161,16 +193,32 @@ class backWalk:
 
     def update(self, character, inputs):
         character.move_back(SPEED)
+
+class preJump:
+    def __init__(self):
+        self.prejump = 4
+        self.timer = 0
+    def enter_state(self, character, inputs):
+        if self.timer >= self.prejump:
+            character.jumpCount += 1
+            character.jump(JUMP)
+            return Jump()
+    def update(self, character, inputs):
+        self.timer += 1
+
+
+
 class Jump:
 
     def __init__(self):
         self.release_received = False
 
+
     def enter_state(self, character, inputs):
 
         if character.rect.bottom == FLOOR:
             return Idle()
-        if 'up' in inputs.currentInput and not character.IsJump and (self.release_received == True):
+        if 'up' in inputs.currentInput and not character.IsJump and (self.release_received == True) and character.jumpCount < character.jumpLimit:
 
             if 'right' in inputs.currentInput:
                 character.move_forward(SPEED)
@@ -178,14 +226,15 @@ class Jump:
                 character.move_back(SPEED)
 
             character.jump(JUMP)
-            return doubleJump()
+            character.jumpCount += 1
+            return Jump()
         
     def update(self, character, inputs): 
         #print(character.yvel)
         character.gravity()
-        print(self.release_received)
+        #print(self.release_received)
         if '-up' in inputs.inputBuffer[-1][0]:
-            print('waaw')
+            #print('waaw')
             self.release_received = True
 
 
@@ -238,7 +287,7 @@ class Hitbox:
         self.hs_len = 5
     def timer(self):
         self.time += 1
-    def draw(self):
+    def draw(self, WIN):
         pygame.draw.rect(WIN,RED, self.rect)
 
 
@@ -260,10 +309,11 @@ def collisionHandling(player, hitboxes):
             
 
 def draw(player, hitboxes, thingy):
-    WIN.fill(BLACK)
-    player.draw()
+    WIN.blit(bg_image,bg_rect)
+    #WIN.fill(WHITE)
+    player.draw(WIN)
     for hitbox in hitboxes:
-        hitbox.draw()
+        hitbox.draw(WIN)
     text_surface = le_font.render(f'{player.state}', False, WHITE)
     text_surface2 = le_font.render(f'{player.direction}', False, WHITE)
     thingy.guh()
@@ -275,7 +325,7 @@ def draw(player, hitboxes, thingy):
 def main():
     hitstop = False
     clock = pygame.time.Clock()
-    player = Circle((WIDTH/2)-600, WIDTH/2)
+    player = Player((WIDTH/2)-600, WIDTH/2, player_1_controls)
     thingy = Thingy()
     hitstopTimer = 0
     hitstop_len = 0
@@ -298,7 +348,7 @@ def main():
 
         if hitstop == False:
             hitstop_len = collisionHandling(player, hitboxes)   
-            player.loop(thingy)
+            player.loop(thingy, keys)
             for hitbox in hitboxes:
                 hitbox.timer()
                 if hitbox.time >= hitbox.duration:
@@ -315,5 +365,5 @@ def main():
  
         clock.tick(FPS)
 
-
-main()
+if __name__ == '__main__':
+    main()

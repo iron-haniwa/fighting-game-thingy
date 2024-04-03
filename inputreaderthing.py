@@ -25,34 +25,42 @@ inputBuffer = collections.deque([[None],[None, None]],maxlen=7)
 
 pressTime = 0
 
+bg_image = pygame.transform.scale(pygame.image.load("wafflehousenight.webp").convert_alpha(), (WIDTH*2,HEIGHT*2))
+bg_rect = bg_image.get_rect()
+bg_rect.centerx = WIN.get_rect().centerx
+bg_rect.bottom = WIN.get_rect().bottom
 
 class inputReader:
-    def __init__(self):
+    def __init__(self, controls):
         self.pressTime = 0
         self.inputBuffer = collections.deque([[1],[[None], None]],maxlen=7)
         self.inputsNow = [None]
         self.processedInput = [[None], [None]]
         self.currentInput = []
+        self.controls = controls
 
 
-    def handleInputs(self, direction):
-        keys = pygame.key.get_pressed()
+    def handleInputs(self, direction, keys):
+        keys = keys
 
-        self.inputInterface = {'down':keys[pygame.K_s],
-                               'up':keys[pygame.K_w],
-                               'left':keys[pygame.K_a],
-                               'right':keys[pygame.K_d],
-                               'A':keys[pygame.K_u],
-                               'B':keys[pygame.K_i],
-                               'C':keys[pygame.K_o]}
+        self.inputInterface = {'down':keys[self.controls[0]],
+                               'up':keys[self.controls[1]],
+                               'left':keys[self.controls[2]],
+                               'right':keys[self.controls[3]],
+                               'A':keys[self.controls[4]],
+                               'B':keys[self.controls[5]],
+                               'C':keys[self.controls[6]]}
 
         self.pressTime += 1
         self.inputsNow = [None]
         self.processedInput = [None, None]
         for input in self.inputInterface:
+            if self.inputInterface['right'] and self.inputInterface['left']:
+                    self.inputInterface['right'] = False
+                    self.inputInterface['left'] = False
+
             if self.inputInterface[input] == True:
-                if self.inputInterface['right'] and self.inputInterface['left']:
-                    continue
+                
                 if self.inputsNow[0] is None:
                     self.inputsNow.remove(None)
                 self.inputsNow.append(input)
@@ -100,62 +108,56 @@ class inputReader:
 
 
 
-def specialMovetest(buffer):
-    specials = [
-        {'name':"Hadouken",
-         "sequences":{"seq1":[['down'], ['downright'],['right'],['A']],
-                        "seq2":[['down'],['downright'],['right', 'A']],
-                        "seq3":[['down'],['downright'],['right'],[None],['A']],
-                        "seq4":[['down'], ['downright'],['right'],['A'],['A']],
-                        "seq5":[['down'],['right'],['A']],
-                        "seq6":[['down'],['downright'],['right'],['right','A']],
-                        "seq7":[['down'],['right'],[None],['A']]},
-        "leniency":12,
-        "isCharge":False
-                                          },
-        {'name':"Hammerfall",
-         'sequences':{"seq1":[['left'],['right'],['A']],
-                      "seq2":[['left'],['right','A']],
-                      "seq3":[['left'],['right'],[None],['A']],
-                      "seq4":[['left'],[None],['right'],['right','A']],
-                      "seq5":[['left'],['right'],['right','A']],
-                      "seq6":[['left'],[None],['right','A']]
-                      },
-        "leniency":6,
-        "isCharge":True,
-        "chargeTime":30}
-    ]
-    for move in specials:
-        for seq in move["sequences"]:
-            if [i[0] for i in list(buffer)[-len(move['sequences'][seq]):]] == move["sequences"][seq]:
-                print(move["name"])
-                if move["isCharge"] == True:
-                    #print(move['name'])
-                    #print(buffer[-len(move['sequences'][seq])][1])
-                    if buffer[-len(move['sequences'][seq])][1] > move['chargeTime']:
-                        if max([i[-1] for i in list(buffer)[-len(move['sequences'][seq])+1:]]) <= move["leniency"]:
+class specialMove:
 
-                            return move['name']
+    def commandReader(self, buffer):
+        specials = [
+            
+            {'name': 'Dash',
+             "sequences":{"seq1":[['right'],['right']],
+                          "seq2":[['right'],[None],['right']]},
+             'leniency': 8,
+             "isCharge": False
 
-                if max([i[-1] for i in list(buffer)[-len(move['sequences'][seq]):]]) <= move["leniency"]:
+            }
+        ]
+        for move in specials:
+            for seq in move["sequences"]:
+                if [i[0] for i in list(buffer)[-len(move['sequences'][seq]):]] == move["sequences"][seq]:
+                    #print(move["name"])
+                    if move["isCharge"] == True:
+                        #print(move['name'])
+                        #print(buffer[-len(move['sequences'][seq])][1])
+                        if buffer[-len(move['sequences'][seq])][1] > move['chargeTime']:
+                            if max([i[-1] for i in list(buffer)[-len(move['sequences'][seq])+1:]]) <= move["leniency"]:
 
-                    return move['name']
+                                return move['name']
+
+                    if max([i[-1] for i in list(buffer)[-len(move['sequences'][seq]):]]) <= move["leniency"]:
+
+                        return move['name']
 
             
             
 
-
+player_1_controls = [pygame.K_s,
+                    pygame.K_w,
+                    pygame.K_a,
+                    pygame.K_d,
+                    pygame.K_u,
+                    pygame.K_i,
+                    pygame.K_o]
 
 
 
 def main():
     clock = pygame.time.Clock()
-    buffer1 = inputReader()
+    buffer1 = inputReader(player_1_controls)
+    movereader = specialMove()
     while True:
         WIN.fill(WHITE)
-        buffer1.handleInputs('left')
-        global keys
         keys = pygame.key.get_pressed()
+        buffer1.handleInputs('right', keys)
         global events
         events = pygame.event.get()         
         for event in events:
@@ -163,7 +165,7 @@ def main():
                 pygame.quit()
                 sys.exit()
                 break
-        text_str = str(specialMovetest(buffer1.inputBuffer))
+        text_str = str(movereader.commandReader(buffer1.inputBuffer))
         text_surface = le_font.get_rect(text_str)
         text_surface.center = WIN.get_rect().center
         le_font.render_to(WIN, text_surface.topleft, text_str, (100, 200, 255))
