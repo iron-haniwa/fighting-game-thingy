@@ -22,7 +22,7 @@ bg_rect.bottom = WIN.get_rect().bottom
 FLOOR = HEIGHT - 100
 
 SPEED = 15
-FRICTION = 1
+FRICTION = 2
 
 player_1_controls = [pygame.K_s,
                     pygame.K_w,
@@ -38,8 +38,9 @@ GRAY = (255/2, 255/2, 255/2)
 BLUE = (0, 0, 160)
 DARKBLUE = (0,0,54.5)
 WHITE = (255, 255, 255)
-RED = (255, 0, 0)
+RED = (255, 0, 0, 100)
 PURPLE = (125,0,225)
+GREEN = (0,180,0,100)
 GRAVITY = 2
 JUMP = 40
 red = colour.Color(rgb=(1,0,0))
@@ -52,7 +53,7 @@ class Player:
     
 
     def __init__(self, xpos, ypos, controls):
-        self.height = 400
+        self.height = 420
         self.width = 250
         self.controls = controls
         self.inputBuffer = inputReader(controls)
@@ -69,6 +70,24 @@ class Player:
         self.amountDashed = 0
         self.jumpLimit = 3
         self.jumpCount = 0
+        self.hitboxes = []
+        self.hurtboxes = [Hurtbox(self,self.width, self.height,0,0)]
+
+        self.current_health = 200
+        self.maximum_health = 11700
+        self.health_bar_length = 440
+        self.health_ratio = self.maximum_health / self.health_bar_length
+
+    def get_damage(self, amount):
+        if self.current_health > 0:
+            self.current_health -= amount
+        if self.current_health <= 0:
+            self.current_health = 0
+    def get_health(self,amount):
+        if self.current_health < self.maximum_health:
+            self.current_health += amount
+        if self.current_health >= self.maximum_health:
+            self.current_health = self.maximum_health
          
     
 
@@ -99,17 +118,25 @@ class Player:
         self.yvel = -jumpheight
 
     def process_inputs(self):
-        move = self.moveReader.commandReader(self, self.inputBuffer.inputBuffer)
+        self.move = self.moveReader.commandReader(self, self.inputBuffer.inputBuffer)
 
-        if move == 'Dash' and isinstance(self.state, Jump):
+        if self.move == 'Dash' and isinstance(self.state, Jump):
             #print('guh')
             if self.amountDashed < self.dashLimit:
-                self.xvel += 10
-                self.yvel -= GRAVITY*4
+                self.state = airDash(self)
+        if self.move == '5A':
+            if isinstance(self.state, Idle):
+                self.state = test_light_attack(self)
+            if isinstance(self.state, airDash):
+                if self.state.timer > 8:
+                    self.state = test_light_attack(self)
+
+           
+
 
     def loop(self, thingy, keys):
         
-
+        
         self.inputBuffer.handleInputs(self.direction, keys)
         self.process_inputs()  
         #print(self.state)
@@ -125,6 +152,8 @@ class Player:
         self.movement(self.xvel,self.yvel)
         self.change_state()
         self.state.update(self, self.inputBuffer)
+        for hb in self.hurtboxes:
+            hb.update_pos(self)
         #print(self.direction)
     def draw(self, window):
         pygame.draw.rect(window, PURPLE, self.rect)
@@ -157,11 +186,13 @@ class Idle:
         character.amountDashed = 0
         character.jumpCount = 0
         #print('guh')
-        if abs(character.xvel) > 0:
+        if character.xvel != 0:
             if character.xvel > 0:
                 character.xvel -= FRICTION
             elif character.xvel < 0:
                 character.xvel += FRICTION
+        if abs(character.xvel) == 1:
+            character.xvel = 0
         character.gravity()
 class forwardWalk:
     def enter_state(self, character, inputs):
@@ -196,7 +227,7 @@ class backWalk:
 
 class preJump:
     def __init__(self):
-        self.prejump = 4
+        self.prejump = 3
         self.timer = 0
     def enter_state(self, character, inputs):
         if self.timer >= self.prejump:
@@ -237,16 +268,43 @@ class Jump:
             #print('waaw')
             self.release_received = True
 
-
-class doubleJump:
+class test_light_attack:
+    def __init__(self, character):
+        self.timer = 0
+        #character.yvel = 50
     def enter_state(self, character, inputs):
+        if character.move == '5A':
+            return test_light_attack(character)
+        if self.timer > 17:
+            return Idle()
+    def update(self, character, inputs):
+        self.timer += 1
+        if self.timer == 4:
+            if character.direction == 'right':
+                character.hitboxes.append(Hitbox(-10,5, 175, 0, character))
+            else:
+                character.hitboxes.append(Hitbox(10,5, -175, 0, character))
+
+
+class airDash:
+    def __init__(self,character):
+        self.timer = 0
+        character.yvel = 0
+        self.direction = character.direction
+
+    def enter_state(self, character, inputs):
+
+        if self.timer == 20:
+            return Jump()
         
         if character.rect.bottom == FLOOR:
             return Idle()
         
     def update(self, character, inputs): 
-        #print(character.yvel)
-        character.gravity()
+        character.direction = self.direction
+        character.move_forward(SPEED*2)
+        self.timer += 1 
+    
 
 class Hitstun:
     def __init__(self,knockback,character):
@@ -277,18 +335,54 @@ class Hitstun:
         self.timer += 1 
 
 class Hitbox:
-    def __init__(self, knockback,):
-        self.rect = pygame.Rect(1300, (HEIGHT)-200, 100, 100)
+    def __init__(self, knockback, duration, xoffset, yoffset, player):
+        self.player_rect = player.rect
+        self.rect = pygame.Rect(0, 0, 100, 100)
+        self.xoffset = xoffset
+        self.yoffset = yoffset
+        self.rect.center = self.player_rect.center
+        self.rect.centerx += xoffset
+        self.rect.centery += yoffset
         self.damage = None
         self.kb = knockback
         self.hasHit = False
-        self.duration = 10
+        self.duration = duration
         self.time = 0
         self.hs_len = 5
-    def timer(self):
+    def timer(self, player):
         self.time += 1
+        self.player_rect = player.rect
+        self.rect.center = self.player_rect.center
+        self.rect.centerx += self.xoffset
+        self.rect.centery += self.yoffset
     def draw(self, WIN):
-        pygame.draw.rect(WIN,RED, self.rect)
+        guh = pygame.Surface(self.rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(guh, RED, guh.get_rect())
+        WIN.blit(guh, self.rect)
+        pygame.draw.rect(WIN, RED, self.rect, 5)
+
+
+class Hurtbox:
+    def __init__(self, player, width, height, x_off, y_off):
+        self.player_rect = player.rect
+        self.rect = pygame.Rect(0, 0, width, height)
+        self.x_off = x_off
+        self.y_off = y_off
+    def update_pos(self, player):
+        self.rect.center = player.rect.center
+        self.rect.centerx += self.x_off
+        self.rect.centery += self.y_off
+        #print(self.rect.x)
+        
+    def draw(self, WIN):
+        guh = pygame.Surface(self.rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(guh, GREEN, guh.get_rect())
+        WIN.blit(guh, self.rect)
+        pygame.draw.rect(WIN, GREEN, self.rect, 5)
+        
+
+
+
 
 
 
@@ -343,8 +437,9 @@ def main():
                 hitstop = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
-                    hitboxes.append(Hitbox(20))
+                    #hitboxes.append(Hitbox(20, 10, 1300, (HEIGHT)-200))
                     #print('sneed chungos')
+                    pass
 
         if hitstop == False:
             hitstop_len = collisionHandling(player, hitboxes)   

@@ -48,23 +48,30 @@ player_2_controls = [pygame.K_DOWN,
 
 
 FLOOR = HEIGHT - 100
-
+ 
 SPEED = 15
 FRICTION = 1
 
 PURPLE = (125,0,225)
 WHITE = (255, 255, 255)
 
-def draw(player1, player2, hitbox1, hitbox2):
+def draw(player1, player2):
     bg.draw(WIN)
 
-    player1.draw(WIN)
-    player2.draw(WIN)
+    for hurtbox in player1.hurtboxes:
+        hurtbox.draw(WIN)
+    for hurtbox in player2.hurtboxes:
+        hurtbox.draw(WIN)
+    #player1.draw(WIN)
+    #player2.draw(WIN)
 
-
-    for hitbox in hitbox1:
+    for hurtbox in player1.hurtboxes:
+        hurtbox.draw(WIN)
+    for hurtbox in player2.hurtboxes:
+        hurtbox.draw(WIN)
+    for hitbox in player1.hitboxes:
         hitbox.draw(WIN)
-    for hitbox in hitbox2:
+    for hitbox in player2.hitboxes:
         hitbox.draw(WIN)
     text_surface = le_font.render(f'{player1.state}', False, WHITE)
     text_surface2 = le_font.render(f'{player1.direction}', False, WHITE)
@@ -73,13 +80,24 @@ def draw(player1, player2, hitbox1, hitbox2):
     SCREEN.blit(pygame.transform.scale(WIN, SCREEN.get_rect().size), (0, 0))
     pygame.display.flip()
 
-def collisionHandling(player, hitboxes):
-    for hitboxes in hitboxes:
-        if player.rect.colliderect(hitboxes) and hitboxes.hasHit == False:
-            player.state = p.Hitstun(hitboxes.kb, player)
-            hitboxes.hasHit = True
-            pygame.event.post(hitstop_event)
-            return hitboxes.hs_len
+def collisionHandling(player1, player2):
+    for hitboxes in player2.hitboxes:
+        for hb in player1.hurtboxes:
+            if hb.rect.colliderect(hitboxes) and hitboxes.hasHit == False:
+                player1.state = p.Hitstun(hitboxes.kb, player1)
+                hitboxes.hasHit = True
+                pygame.event.post(hitstop_event)
+                print(hitboxes.hs_len)
+                return hitboxes.hs_len
+    for hitboxes in player1.hitboxes:
+        for hb in player2.hurtboxes:
+            if hb.rect.colliderect(hitboxes) and hitboxes.hasHit == False:
+                player2.state = p.Hitstun(hitboxes.kb, player2)
+                hitboxes.hasHit = True
+                pygame.event.post(hitstop_event)
+                print(hitboxes.hs_len)
+                return hitboxes.hs_len
+        
         
 
 
@@ -108,23 +126,26 @@ def main():
                 hitstop = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
-                    p2hitboxes.append(p.Hitbox(20))
+                    player2.hitboxes.append(p.Hitbox(20, 10, 1300, (HEIGHT)-200))
                     print('sneed chungos')
 
 
         if hitstop == False:
-            hitstop_len = collisionHandling(player1, p2hitboxes)   
+            hitstop_len = collisionHandling(player1, player2)
+       
             player1.loop(player2, keys)
             player2.loop(player1, keys)
-            for hitbox in p1hitboxes:
-                hitbox.timer()
+            for hitbox in player1.hitboxes:
+                hitbox.timer(player1)
                 if hitbox.time >= hitbox.duration:
-                    p1hitboxes.remove(hitbox)
-            for hitbox in p2hitboxes:
-                hitbox.timer()
+                    player1.hitboxes.remove(hitbox)
+            for hitbox in player2.hitboxes:
+                hitbox.timer(player2)
                 if hitbox.time >= hitbox.duration:
-                    p2hitboxes.remove(hitbox)
+                    player2.hitboxes.remove(hitbox)
         else:
+            print(hitstopTimer)
+            print(hitstop_len)
             if hitstopTimer < hitstop_len:
                 hitstopTimer += 1
             else:
@@ -137,7 +158,7 @@ def main():
         
         
 
-        draw(player1,player2,p1hitboxes, p2hitboxes)
+        draw(player1,player2)
  
         clock.tick(FPS)
 main()
