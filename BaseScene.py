@@ -19,7 +19,7 @@ SCREEN = pygame.display.set_mode((WIDTH/1.5,HEIGHT/1.5))
 WIN = pygame.surface.Surface((WIDTH, HEIGHT))
 FPS = 60
 
-bg = Background('wafflehousenight.webp', WIDTH, HEIGHT, WIN)
+bg = Background('wafflehouseday.jpg', WIDTH, HEIGHT, WIN)
 
 
 
@@ -36,9 +36,9 @@ player_2_controls = [pygame.K_DOWN,
                     pygame.K_UP,
                     pygame.K_LEFT,
                     pygame.K_RIGHT,
-                    pygame.K_1,
-                    pygame.K_2,
-                    pygame.K_3]
+                    pygame.K_b,
+                    pygame.K_n,
+                    pygame.K_m]
 
 
 
@@ -54,14 +54,12 @@ FRICTION = 1
 
 PURPLE = (125,0,225)
 WHITE = (255, 255, 255)
+BLACK = (0,0,0)
 
 def draw(player1, player2):
     bg.draw(WIN)
 
-    for hurtbox in player1.hurtboxes:
-        hurtbox.draw(WIN)
-    for hurtbox in player2.hurtboxes:
-        hurtbox.draw(WIN)
+
     #player1.draw(WIN)
     #player2.draw(WIN)
 
@@ -73,30 +71,42 @@ def draw(player1, player2):
         hitbox.draw(WIN)
     for hitbox in player2.hitboxes:
         hitbox.draw(WIN)
-    text_surface = le_font.render(f'{player1.state}', False, WHITE)
-    text_surface2 = le_font.render(f'{player1.direction}', False, WHITE)
+    
+    player1.draw(WIN)
+    player2.draw(WIN)
+
+    text_surface = le_font.render(f'{type(player1.state).__name__}', False, BLACK)
+    text_surface2 = le_font.render(f'{player1.direction}', False, BLACK)
     WIN.blit(text_surface,(0,0))
     WIN.blit(text_surface2,(0,30))
     SCREEN.blit(pygame.transform.scale(WIN, SCREEN.get_rect().size), (0, 0))
     pygame.display.flip()
 
 def collisionHandling(player1, player2):
+    hs = 0
     for hitboxes in player2.hitboxes:
         for hb in player1.hurtboxes:
             if hb.rect.colliderect(hitboxes) and hitboxes.hasHit == False:
-                player1.state = p.Hitstun(hitboxes.kb, player1)
+                hs = player1.get_hit(hitboxes)
                 hitboxes.hasHit = True
                 pygame.event.post(hitstop_event)
-                print(hitboxes.hs_len)
-                return hitboxes.hs_len
+                if hs == None:
+                    return 0
+                return hs
     for hitboxes in player1.hitboxes:
         for hb in player2.hurtboxes:
             if hb.rect.colliderect(hitboxes) and hitboxes.hasHit == False:
-                player2.state = p.Hitstun(hitboxes.kb, player2)
+                hs = player2.get_hit(hitboxes)
                 hitboxes.hasHit = True
                 pygame.event.post(hitstop_event)
-                print(hitboxes.hs_len)
-                return hitboxes.hs_len
+                if hs == None:
+                    return 0
+                return hs
+    
+      
+   
+                
+                
         
         
 
@@ -108,8 +118,8 @@ def main():
     hitstopTimer = 0
     hitstop_len = 0
 
-    player1 = p.Player(WIN.get_rect().centerx-600,WIDTH/2, player_1_controls)
-    player2 = p.Player(WIN.get_rect().centerx+600,WIDTH/2, player_2_controls)
+    player1 = p.Player(WIN.get_rect().centerx-600,HEIGHT/2, player_1_controls)
+    player2 = p.Player(WIN.get_rect().centerx+600,HEIGHT/2, player_2_controls, False)
     player1.rect.right = WIN.get_rect().centerx-600
     while True:
 
@@ -131,10 +141,11 @@ def main():
 
 
         if hitstop == False:
-            hitstop_len = collisionHandling(player1, player2)
-       
+            
+            
             player1.loop(player2, keys)
             player2.loop(player1, keys)
+            hitstop_len = collisionHandling(player1, player2)
             for hitbox in player1.hitboxes:
                 hitbox.timer(player1)
                 if hitbox.time >= hitbox.duration:
@@ -159,6 +170,6 @@ def main():
         
 
         draw(player1,player2)
- 
+        #print(player1.IsJump)
         clock.tick(FPS)
 main()

@@ -120,6 +120,13 @@ class specialMove:
              "isCharge": False
 
             },
+            {'name': 'bDash',
+             "sequences":{"seq1":[['left'],['left']],
+                          "seq2":[['left'],[None],['left']]},
+             'leniency': 8,
+             "isCharge": False
+
+            },
             {'name': '5A',
              "sequences":{"seq1":[['A']],
                           "seq2":[['right','A']]
@@ -142,8 +149,9 @@ class specialMove:
                                 return move['name']
 
                     if max([i[-1] for i in list(buffer)[-len(move['sequences'][seq]):]]) <= move["leniency"]:
-
+                        #print(move["name"])
                         return move['name']
+                        
 
             
             
