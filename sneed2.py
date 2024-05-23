@@ -9,7 +9,7 @@ HITSTOP = pygame.USEREVENT + 1
 hitstop_event = pygame.event.Event(HITSTOP)
 hitboxes = []
 
-WIDTH, HEIGHT = 1920, 1080
+WIDTH, HEIGHT = 1280, 720
 SCREEN = pygame.display.set_mode((WIDTH/1.5,HEIGHT/1.5))
 WIN = pygame.surface.Surface((WIDTH, HEIGHT))
 FPS = 60
@@ -19,9 +19,9 @@ bg_rect = bg_image.get_rect()
 bg_rect.centerx = WIN.get_rect().centerx
 bg_rect.bottom = WIN.get_rect().bottom
 
-FLOOR = HEIGHT - 100
+FLOOR = HEIGHT - 60
 
-SPEED = 15
+SPEED = 8
 FRICTION = 2
 
 player_1_controls = [pygame.K_s,
@@ -42,7 +42,7 @@ RED = (255, 0, 0, 100)
 PURPLE = (125,0,225)
 GREEN = (0,180,0,100)
 GRAVITY = 2
-JUMP = 50
+JUMP = 40
 red = colour.Color(rgb=(1,0,0))
 blue = colour.Color(rgb=(1,0,1))
 color = list(red.range_to(blue, 100))
@@ -78,13 +78,14 @@ class Player:
     
 
     def __init__(self, xpos, ypos, controls, stfu=True):
-        self.height = 370
-        self.width = 170
+        self.height = 230
+        self.width = 100
         self.controls = controls
         self.inputBuffer = inputReader(controls)
         self.absrect = pygame.Rect(xpos,ypos, self.width, self.height)
         self.rect = pygame.Rect(xpos,ypos, self.width, self.height)
-        
+        self.speed = SPEED
+        self.dashFactor = 2.5
         self.xvel = 0
         self.yvel = 0
         self.IsJump = False
@@ -99,8 +100,11 @@ class Player:
         self.jumpCount = 0
         self.hitboxes = []
         self.hurtboxes = []
+        self.defaultHB = Hurtbox(self,160, 390,0,80)
+        self.crouchHB = Hurtbox(self,160, 390/2,0,-20)
         self.passthrough = False
         self.pushbox = Pushbox(self, self.width, self.height)
+        self.animIndex = 0
         
         self.floor = ypos
        
@@ -170,7 +174,9 @@ class Player:
 
     def change_state(self):
         new_state = self.state.enter_state(self, self.inputBuffer)
-        if new_state: self.state = new_state
+        if new_state: 
+            self.state = new_state
+            self.animIndex = 0
         else: self.state
 
     def movement(self, dx, dy, player):
@@ -202,8 +208,8 @@ class Player:
         for hb in self.hurtboxes:
             hb.update_pos(self)
         
-    def gravity(self):
-        self.yvel += GRAVITY
+    def gravity(self, factor=1):
+        self.yvel += GRAVITY * factor
     def move_back(self, vel):
         if self.direction == 'right':
             self.xvel = -vel
@@ -227,6 +233,9 @@ class Player:
         
     def jump(self, jumpheight):
         self.yvel = -jumpheight
+
+    def animController(self, WIN):
+        pass
 
     def process_inputs(self):
         self.move = self.moveReader.commandReader(self, self.inputBuffer.inputBuffer)
@@ -278,6 +287,8 @@ class Player:
         
         self.movement(self.xvel,self.yvel, thingy)
 
+        
+
 
         
         
@@ -287,8 +298,8 @@ class Player:
         guh = pygame.Surface(self.rect.size, pygame.SRCALPHA)
         pygame.draw.rect(guh, GRAY, guh.get_rect())
         WIN.blit(guh, self.rect)
-        pygame.draw.rect(WIN, GRAY, self.rect, 5)
-
+        pygame.draw.rect(WIN, GRAY, self.rect, 2)
+        self.animController(WIN)
 
     
         
@@ -305,6 +316,10 @@ class Player:
 
 
 class Idle:
+    def __init__(self, endDash=False):
+        self.timer = 0
+        self.endDash = endDash
+
     def enter_state(self, character, inputs):
         if 'right' in inputs.currentInput:
             return forwardWalk()
@@ -318,12 +333,15 @@ class Idle:
     
     def update(self, character, inputs):
         character.rect.height = character.height
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
+        character.hurtboxes = [character.defaultHB]
         character.amountDashed = 0
         character.jumpCount = 0
         #print('guh')
         character.do_friction()
         character.gravity()
+        self.timer += 1
+        if self.timer >= 120:
+            self.timer = 0
 
 class Crouch:
     def enter_state(self,character,inputs):
@@ -331,7 +349,7 @@ class Crouch:
             return Idle()
     def update(self,character,inputs):
         character.rect.height = character.height/2
-        character.hurtboxes = [Hurtbox(character,250, 390/1.5,0,-70)]
+        character.hurtboxes = [character.crouchHB]
         character.do_friction()
         if 'downleft' in inputs.currentInput:
             character.isBlock = True
@@ -346,14 +364,14 @@ class forwardWalk:
 
         if inputs.currentInput != ['right']:
             if character.direction == 'right':
-                character.xvel -= SPEED
+                character.xvel -= character.speed
             else:
-                character.xvel += SPEED
+                character.xvel += character.speed
             return Idle()
         
     def update(self, character, inputs):
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
-        character.move_forward(SPEED)
+        character.hurtboxes = [character.defaultHB]
+        character.move_forward(character.speed)
 class backWalk:
     def enter_state(self, character, inputs):
 
@@ -363,17 +381,17 @@ class backWalk:
 
         if inputs.currentInput != ['left']:
             if character.direction == 'right':
-                character.xvel += SPEED
+                character.xvel += character.speed
             else:
-                character.xvel -= SPEED
+                character.xvel -= character.speed
             character.isBlock = False
             return Idle()
 
     def update(self, character, inputs):
         character.isBlock = True
         character.blockLevel = 'H'
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
-        character.move_back(SPEED)
+        character.hurtboxes = [character.defaultHB]
+        character.move_back(character.speed)
 
 class preJump:
     def __init__(self, dir):
@@ -390,7 +408,7 @@ class preJump:
             else:
                 return Jump()
     def update(self, character, inputs):
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
+        character.hurtboxes = [character.defaultHB]
         self.timer += 1
         
 
@@ -411,16 +429,16 @@ class Jump:
         if 'up' in inputs.currentInput and not character.IsJump and (self.release_received == True) and character.jumpCount < character.jumpLimit:
 
             if 'right' in inputs.currentInput:
-                character.move_forward(SPEED)
+                character.move_forward(character.speed)
             elif 'left' in inputs.currentInput:
-                character.move_back(SPEED)
+                character.move_back(character.speed)
 
             character.jump(JUMP)
             character.jumpCount += 1
             return Jump()
         
     def update(self, character, inputs):
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
+        character.hurtboxes = [character.defaultHB]
         character.isJump = True
         character.gravity()
         #print(self.release_received)
@@ -435,10 +453,10 @@ class Dash:
         elif inputs.currentInput != ['right']:
             
             
-                return Idle()
+                return Idle(endDash=True)
     def update(self, character, inputs):
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
-        character.move_forward(SPEED*2.5)
+        character.hurtboxes = [character.defaultHB]
+        character.move_forward(character.speed*character.dashFactor)
 
 class backDash:
     def __init__(self):
@@ -447,22 +465,26 @@ class backDash:
         if self.timer > 24:
             return Idle()
     def update(self, character, inputs):
+        if self.timer == 1:
+            character.jump(5)
         if self.timer < 3:
             character.hurtboxes = []
-            character.move_back(SPEED*2)
+            character.move_back(character.speed*3)
+            
         elif self.timer > 6:
             character.do_friction()
-            character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
+            character.hurtboxes = [character.defaultHB]
             
         elif self.timer < 15:
             character.isJump = True
         elif self.timer > 15:
             character.isJump = False
+        character.gravity(0.5)
         self.timer += 1
 class test_light_attack:
     def __init__(self, character):
         self.timer = 0
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
+        character.hurtboxes = [character.defaultHB]
         #character.yvel = 50
     def enter_state(self, character, inputs):
         if character.move == '5A':
@@ -474,11 +496,11 @@ class test_light_attack:
         self.timer += 1
         if self.timer == 4:
             if character.direction == 'right':
-                character.hurtboxes = [Hurtbox(character,250, 390,0,0), 
+                character.hurtboxes = [character.defaultHB, 
                                        Hurtbox(character,150,120,175,70)]
                 character.hitboxes.append(Hitbox(-15, 0, 5, 175, 70, character, 'mid', 1))
             else:
-                character.hurtboxes = [Hurtbox(character,250, 390,0,0), 
+                character.hurtboxes = [character.defaultHB, 
                                        Hurtbox(character,150,120,-175,70)]
                 character.hitboxes.append(Hitbox(15, 0, 5, -175, 70, character, 'mid', 1))
 
@@ -489,7 +511,7 @@ class airDash:
         character.yvel = 0
         self.direction = character.direction
         character.amountDashed += 1
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
+        character.hurtboxes = [character.defaultHB]
 
     def enter_state(self, character, inputs):
 
@@ -501,7 +523,7 @@ class airDash:
         
     def update(self, character, inputs): 
         character.direction = self.direction
-        character.move_forward(SPEED*2)
+        character.move_forward(character.speed*2)
         self.timer += 1
 class airbDash:
     def __init__(self,character):
@@ -510,7 +532,7 @@ class airbDash:
         
         self.direction = character.direction
         character.amountDashed += 1
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
+        character.hurtboxes = [character.defaultHB]
 
     def enter_state(self, character, inputs):
 
@@ -522,7 +544,7 @@ class airbDash:
         
     def update(self, character, inputs): 
         character.direction = self.direction
-        character.move_back(SPEED*1.2)
+        character.move_back(character.speed*1.2)
         self.timer += 1
 
 
@@ -535,7 +557,7 @@ class gotGrabbed:
 
 class Hitstun:
     def __init__(self,xknockback,character,length):
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
+        character.hurtboxes = [character.defaultHB]
         self.timer = 0
         self.length = length
         character.xvel -= xknockback
@@ -585,7 +607,7 @@ class Blockstun:
 
 class cHitstun:
     def __init__(self,xknockback,character,length):
-        character.hurtboxes = [Hurtbox(character,250, 390,0,0)]
+        character.hurtboxes = [character.defaultHB]
         self.timer = 0
         self.length = length
         character.xvel -= xknockback
@@ -738,7 +760,7 @@ class Hurtbox:
         guh = pygame.Surface(self.rect.size, pygame.SRCALPHA)
         pygame.draw.rect(guh, GREEN, guh.get_rect())
         WIN.blit(guh, self.rect)
-        pygame.draw.rect(WIN, GREEN, self.rect, 5)
+        pygame.draw.rect(WIN, GREEN, self.rect, 2)
 
 class Pushbox:
     def __init__(self, player, width, height, x_off=0, y_off=0):

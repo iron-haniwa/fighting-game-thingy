@@ -2,6 +2,7 @@ import pygame, sys, random, colour, collections
 import sneed2 as p
 from backgroundClass import Background
 import pygame.freetype
+import testchar
 pygame.init()
 pygame.font.init()
 
@@ -14,12 +15,12 @@ p1hitboxes = []
 p2hitboxes = []
 
 
-WIDTH, HEIGHT = 1920, 1080
-SCREEN = pygame.display.set_mode((WIDTH/1.5,HEIGHT/1.5))
+WIDTH, HEIGHT = 1280, 720
+SCREEN = pygame.display.set_mode((WIDTH/1,HEIGHT/1))
 WIN = pygame.surface.Surface((WIDTH, HEIGHT))
 FPS = 60
 
-bg = Background('wafflehouseday.jpg', WIDTH, HEIGHT, WIN)
+bg = Background('wafflehousenight.webp', WIDTH, HEIGHT, WIN)
 
 
 
@@ -47,7 +48,7 @@ player_2_controls = [pygame.K_DOWN,
 
 
 
-FLOOR = HEIGHT - 100
+FLOOR = HEIGHT - 50
  
 SPEED = 15
 FRICTION = 1
@@ -118,7 +119,7 @@ def main():
     hitstopTimer = 0
     hitstop_len = 0
 
-    player1 = p.Player(WIN.get_rect().centerx-600,HEIGHT/2, player_1_controls)
+    player1 = testchar.testChar(WIN.get_rect().centerx-600,HEIGHT/2, player_1_controls)
     player2 = p.Player(WIN.get_rect().centerx+600,HEIGHT/2, player_2_controls, False)
     player1.rect.right = WIN.get_rect().centerx-600
     while True:
