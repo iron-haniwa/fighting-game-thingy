@@ -98,7 +98,7 @@ class Player:
         self.amountDashed = 0
         self.jumpLimit = 3
         self.jumpCount = 0
-        self.hitboxes = []
+        self.hitboxes = {}
         self.hurtboxes = []
         self.defaultHB = Hurtbox(self,160, 390,0,80)
         self.crouchHB = Hurtbox(self,160, 390/2,0,-20)
@@ -106,13 +106,15 @@ class Player:
         self.pushbox = Pushbox(self, self.width, self.height)
         self.animIndex = 0
         
+        
+
         self.floor = ypos
        
         self.isBlock = False
         self.blockLevel = 'LH'
         self.stfu = stfu
 
-        self.current_health = 200
+        self.current_health = 11700
         self.maximum_health = 11700
         self.health_bar_length = 440
         self.health_ratio = self.maximum_health / self.health_bar_length
@@ -134,9 +136,11 @@ class Player:
                     self.state = Blockstun(hitbox.kb, self, hitbox.blockstun)
                 else:
                     if 'downleft' in self.inputBuffer.currentInput:
+                        self.get_damage(hitbox.damage)
                         self.state = cHitstun(hitbox.kb, self, hitbox.hitstun)
                         return hitbox.hitstop
                     else:
+                        self.get_damage(hitbox.damage)
                         self.state = Hitstun(hitbox.kb, self, hitbox.hitstun)
                         return hitbox.hitstop
             elif hitbox.height == 'low':
@@ -147,21 +151,23 @@ class Player:
                         self.state = Blockstun(hitbox.kb, self, hitbox.blockstun)
                 else:
                     if 'down' in self.inputBuffer.currentInput:
+                        self.get_damage(hitbox.damage)
                         self.state = cHitstun(hitbox.kb, self, hitbox.hitstun)
                         return hitbox.hitstop
                     else:
+                        self.get_damage(hitbox.damage)
                         self.state = Hitstun(hitbox.kb, self, hitbox.hitstun)
                         return hitbox.hitstop
         else:
             
-            #do damage goes here
+            self.get_damage(hitbox.damage)
             if self.rect.bottom < FLOOR:
                 self.state = airStun(hitbox.kb, self)
             else:
                 self.state = Hitstun(hitbox.kb, self, hitbox.hitstun)
                 return hitbox.hitstop
     def get_damage(self, damage):
-        pass
+        self.current_health -= damage
 
 
     def get_health(self,amount):
@@ -261,8 +267,20 @@ class Player:
                 if self.state.timer > 8:
                     self.state = test_light_attack(self)
 
-           
-
+    def place_hitbox(self, KEY, xkb, ykb, dur, xoff, yoff, w, h,player, height, level, damage, *properties):
+        
+        if self.direction == 'right':
+            if KEY in self.hitboxes:
+                self.hitboxes[KEY].append(Hitbox(xkb,ykb,dur,xoff,yoff,w,h,self,height,level,damage,properties))
+            else:
+                self.hitboxes[KEY] = [Hitbox(xkb,ykb,dur,xoff,yoff,w,h,self,height,level,damage,properties)]
+                print('WHY WONT THIS WORK')
+                print(self.hitboxes[KEY])
+        else:
+            if f'{KEY}' in self.hitboxes:
+                self.hitboxes[KEY].append(Hitbox(-xkb,ykb,dur,-xoff,yoff,w,h,self,height,level,damage,properties))
+            else:
+                self.hitboxes[KEY] = [Hitbox(-xkb,ykb,dur,-xoff,yoff,w,h,self,height,level,damage,properties)]
 
     def loop(self, thingy, keys):
         
@@ -329,7 +347,7 @@ class Idle:
             inputs.inputBuffer[-1].append('jumped')
             return preJump('Up')
         if any(x in ['down','downright','downleft'] for x in inputs.currentInput):
-            return Crouch()
+            return Crouch(True)
     
     def update(self, character, inputs):
         character.rect.height = character.height
@@ -344,6 +362,10 @@ class Idle:
             self.timer = 0
 
 class Crouch:
+
+    def __init__(self, startCrouch = False):
+        self.startCrouch = startCrouch
+
     def enter_state(self,character,inputs):
         if not any(x in ['down','downright','downleft'] for x in inputs.currentInput):
             return Idle()
@@ -498,11 +520,11 @@ class test_light_attack:
             if character.direction == 'right':
                 character.hurtboxes = [character.defaultHB, 
                                        Hurtbox(character,150,120,175,70)]
-                character.hitboxes.append(Hitbox(-15, 0, 5, 175, 70, character, 'mid', 1))
+                character.hitboxes.append([Hitbox(-15, 0, 5, 175, 70, character, 'mid', 1,50)])
             else:
                 character.hurtboxes = [character.defaultHB, 
                                        Hurtbox(character,150,120,-175,70)]
-                character.hitboxes.append(Hitbox(15, 0, 5, -175, 70, character, 'mid', 1))
+                character.hitboxes.append([Hitbox(15, 0, 5, -175, 70, character, 'mid', 1, 50)])
 
 
 class airDash:
@@ -710,9 +732,11 @@ class hard_KD:
 
 
 class Hitbox:
-    def __init__(self, xknockback, yknockback, duration, xoffset, yoffset, player, height, level, *properties):
+    def __init__(self, xknockback, yknockback, duration, xoffset, yoffset, w, h, player, height, level, damage,*properties):
         self.player_rect = player.absrect
-        self.rect = pygame.Rect(0, 0, 100, 100)
+        self.width = w
+        self.height = h
+        self.rect = pygame.Rect(0, 0, self.width, self.height)
         self.xoffset = xoffset
         self.yoffset = -yoffset
         self.rect.center = self.player_rect.center
@@ -730,6 +754,7 @@ class Hitbox:
         self.blockstun = self.level_attributes['blockstun']
         self.height = height
         self.properties = properties
+        self.damage = damage
     def timer(self, player):
         self.time += 1
         self.player_rect = player.rect

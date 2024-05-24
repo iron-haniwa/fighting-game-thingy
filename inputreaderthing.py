@@ -134,6 +134,15 @@ class specialMove:
              'leniency': 2,
              "isCharge": False
 
+            },
+            {'name': '2A',
+             "sequences":{"seq1":[['down','A']],
+                          "seq2":[['downright','A']],
+                          "seq3":[['downright','A']]
+                          },
+             'leniency': 2,
+             "isCharge": False
+
             }
         ]
         for move in specials:
