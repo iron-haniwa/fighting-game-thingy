@@ -138,7 +138,7 @@ class specialMove:
             {'name': '2A',
              "sequences":{"seq1":[['down','A']],
                           "seq2":[['downright','A']],
-                          "seq3":[['downright','A']]
+                          "seq3":[['A','downright']]
                           },
              'leniency': 2,
              "isCharge": False

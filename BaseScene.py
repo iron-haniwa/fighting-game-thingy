@@ -68,6 +68,7 @@ def draw(player1, player2, healthbars):
         hurtbox.draw(WIN)
     for hurtbox in player2.hurtboxes:
         hurtbox.draw(WIN)
+    player1.draw(WIN)
     for attack in player1.hitboxes:
         for hitbox in player1.hitboxes[attack]:
             hitbox.draw(WIN)
@@ -75,7 +76,7 @@ def draw(player1, player2, healthbars):
         for hitbox in player1.hitboxes[attack]:
             hitbox.draw(WIN)
     
-    player1.draw(WIN)
+    
     player2.draw(WIN)
     healthbars.draw(WIN, player1.current_health, player2.current_health)
 
@@ -160,13 +161,13 @@ def main():
             player1.loop(player2, keys)
             player2.loop(player1, keys)
             hitstop_len = collisionHandling(player1, player2)
-            
+            #print(player2.hitboxes)
             for attack in list(player1.hitboxes.keys()):
                 for hitbox in player1.hitboxes[attack]:
                     hitbox.timer(player1)
                     if hitbox.time >= hitbox.duration:
                         player1.hitboxes[attack].remove(hitbox)
-            print(player2.hitboxes)
+            #print(player2.hitboxes)
             for attack in list(player2.hitboxes.keys()):
                 for hitbox in player1.hitboxes[attack]:
                     hitbox.timer(player2)

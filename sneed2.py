@@ -119,10 +119,18 @@ class Player:
         self.health_bar_length = 440
         self.health_ratio = self.maximum_health / self.health_bar_length
 
+    def directionFlip(self, xvalue):
+        if self.direction == 'left':
+            return -xvalue
+        else:
+            return xvalue
+
+
+
     def get_hit(self, hitbox):
         print(hitbox.hitstop)
 
-        self.hitboxes = []
+        self.hitboxes = {}
         
         if self.isBlock:
             if hitbox.height == 'mid':
@@ -233,7 +241,7 @@ class Player:
                 self.xvel -= FRICTION * factor
             elif self.xvel < 0:
                 self.xvel += FRICTION * factor
-        if abs(self.xvel) < 1:
+        if abs(self.xvel) <= 1:
             self.xvel = 0
     #def do_pushback(self, player):
         
@@ -271,16 +279,16 @@ class Player:
         
         if self.direction == 'right':
             if KEY in self.hitboxes:
-                self.hitboxes[KEY].append(Hitbox(xkb,ykb,dur,xoff,yoff,w,h,self,height,level,damage,properties))
+                self.hitboxes[KEY].append(Hitbox(-xkb,ykb,dur,xoff,yoff,w,h,self,height,level,damage,properties))
             else:
-                self.hitboxes[KEY] = [Hitbox(xkb,ykb,dur,xoff,yoff,w,h,self,height,level,damage,properties)]
-                print('WHY WONT THIS WORK')
-                print(self.hitboxes[KEY])
+                self.hitboxes[KEY] = [Hitbox(-xkb,ykb,dur,xoff,yoff,w,h,self,height,level,damage,properties)]
+                #print('WHY WONT THIS WORK')
+                #print(self.hitboxes[KEY])
         else:
             if f'{KEY}' in self.hitboxes:
-                self.hitboxes[KEY].append(Hitbox(-xkb,ykb,dur,-xoff,yoff,w,h,self,height,level,damage,properties))
+                self.hitboxes[KEY].append(Hitbox(xkb,ykb,dur,-xoff,yoff,w,h,self,height,level,damage,properties))
             else:
-                self.hitboxes[KEY] = [Hitbox(-xkb,ykb,dur,-xoff,yoff,w,h,self,height,level,damage,properties)]
+                self.hitboxes[KEY] = [Hitbox(xkb,ykb,dur,-xoff,yoff,w,h,self,height,level,damage,properties)]
 
     def loop(self, thingy, keys):
         
@@ -312,12 +320,12 @@ class Player:
         
             
     def draw(self, WIN):
-
+        self.animController(WIN)
         guh = pygame.Surface(self.rect.size, pygame.SRCALPHA)
         pygame.draw.rect(guh, GRAY, guh.get_rect())
         WIN.blit(guh, self.rect)
         pygame.draw.rect(WIN, GRAY, self.rect, 2)
-        self.animController(WIN)
+        
 
     
         
@@ -370,6 +378,7 @@ class Crouch:
         if not any(x in ['down','downright','downleft'] for x in inputs.currentInput):
             return Idle()
     def update(self,character,inputs):
+        character.rect.bottom = FLOOR
         character.rect.height = character.height/2
         character.hurtboxes = [character.crouchHB]
         character.do_friction()
@@ -438,8 +447,9 @@ class preJump:
 
 class Jump:
 
-    def __init__(self):
+    def __init__(self, postDash=False):
         self.release_received = False
+        self.postDash = postDash
 
         
     def enter_state(self, character, inputs):
@@ -538,7 +548,7 @@ class airDash:
     def enter_state(self, character, inputs):
 
         if self.timer == 20:
-            return Jump()
+            return Jump(postDash=True)
         
         if character.rect.bottom == FLOOR:
             return Idle()
