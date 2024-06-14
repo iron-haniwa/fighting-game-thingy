@@ -15,6 +15,9 @@ p1hitboxes = []
 p2hitboxes = []
 
 
+
+
+
 WIDTH, HEIGHT = 1280, 720
 SCREEN = pygame.display.set_mode((WIDTH/1,HEIGHT/1))
 WIN = pygame.surface.Surface((WIDTH, HEIGHT))
@@ -45,7 +48,7 @@ player_2_controls = [pygame.K_DOWN,
 
 
 
-
+#if self.move not in player2.currentCombo:
 
 
 FLOOR = HEIGHT - 50
@@ -57,12 +60,17 @@ PURPLE = (125,0,225)
 WHITE = (255, 255, 255)
 BLACK = (0,0,0)
 
+
+character_dict = {'Shiki':testchar.testChar,
+                  'Test':p.Player}
+
+
 def draw(player1, player2, healthbars):
     bg.draw(WIN)
 
 
-    #player1.draw(WIN)
-    #player2.draw(WIN)
+    # player1.draw(WIN)
+    # player2.draw(WIN)
 
     for hurtbox in player1.hurtboxes:
         hurtbox.draw(WIN)
@@ -73,7 +81,7 @@ def draw(player1, player2, healthbars):
         for hitbox in player1.hitboxes[attack]:
             hitbox.draw(WIN)
     for attack in player2.hitboxes:
-        for hitbox in player1.hitboxes[attack]:
+        for hitbox in player2.hitboxes[attack]:
             hitbox.draw(WIN)
     
     
@@ -106,8 +114,11 @@ def collisionHandling(player1, player2):
         for hitbox in player1.hitboxes[attack]:
 
             for hurtbox in player2.hurtboxes:
+                
                 if hurtbox.rect.colliderect(hitbox.rect) and hitbox.hasHit == False:
                     hitstop = player2.get_hit(hitbox)
+                    #player2.hurtboxes.remove(hurtbox)
+                    #player1.hitboxes[attack].remove(hitbox)
                     for hitbox in player1.hitboxes[attack]:
                         hitbox.hasHit = True
                     pygame.event.post(hitstop_event)
@@ -124,15 +135,16 @@ def collisionHandling(player1, player2):
 
 
 
-def main():
+def main(player1char, player2char):
     hitstop = False
     clock = pygame.time.Clock()
     hitstopTimer = 0
     hitstop_len = 0
 
-    player1 = testchar.testChar(WIN.get_rect().centerx-400,HEIGHT/2, player_1_controls)
-    player2 = p.Player(WIN.get_rect().centerx+400,HEIGHT/2, player_2_controls, False)
+    player1 = character_dict[player1char](WIN.get_rect().centerx-400,FLOOR, player_1_controls)
     player1.rect.right = WIN.get_rect().centerx-400
+
+    player2 = character_dict[player2char](WIN.get_rect().centerx+400,FLOOR, player_2_controls, False)
 
     healthbars = healthBarclass.healthBar(player1.maximum_health, player2.maximum_health)
 
@@ -158,21 +170,21 @@ def main():
         if hitstop == False:
             
             
-            player1.loop(player2, keys)
-            player2.loop(player1, keys)
+            player1.loop(player2, keys, WIN)
+            player2.loop(player1, keys, WIN)
             hitstop_len = collisionHandling(player1, player2)
             #print(player2.hitboxes)
             for attack in list(player1.hitboxes.keys()):
                 for hitbox in player1.hitboxes[attack]:
-                    hitbox.timer(player1)
                     if hitbox.time >= hitbox.duration:
-                        player1.hitboxes[attack].remove(hitbox)
+                        for hitbox in player1.hitboxes[attack]:
+                            player1.hitboxes[attack].remove(hitbox)
             #print(player2.hitboxes)
             for attack in list(player2.hitboxes.keys()):
-                for hitbox in player1.hitboxes[attack]:
-                    hitbox.timer(player2)
+                for hitbox in player2.hitboxes[attack]:
                     if hitbox.time >= hitbox.duration:
-                        player2.hitboxes[attack].remove(hitbox)
+                        for hitbox in player2.hitboxes[attack]:
+                            player2.hitboxes[attack].remove(hitbox)
             for attack in list(player1.hitboxes.keys()):
                 if any(player1.hitboxes[attack]) == False:
                     del player1.hitboxes[attack]
@@ -181,8 +193,8 @@ def main():
                     del player2.hitboxes[attack]
             
         else:
-            print(hitstopTimer)
-            print(hitstop_len)
+            #print(hitstopTimer)
+            #print(hitstop_len)
             if hitstopTimer < hitstop_len:
                 hitstopTimer += 1
             else:
@@ -196,6 +208,8 @@ def main():
         
 
         draw(player1,player2,healthbars)
-        #print(player1.IsJump)
-        clock.tick(FPS)
-main()
+        # print(player1.animIndex)
+        clock.tick(FPS/1)
+
+if __name__ == '__main__':
+    main('Shiki', 'Shiki')

@@ -1,4 +1,4 @@
-import pygame, sys, random, colour
+import pygame, sys, random, colour, sneed2, testchar
 pygame.init()
 pygame.font.init()
 
@@ -18,37 +18,33 @@ RED = (255, 0, 0)
 PURPLE = (125,0,225)
 YELLOW = (255,255,0)
 
+YOFFSET = 0
+
 GRAVITY = 2
 JUMP = 40
+FLOOR = HEIGHT - 50
+player_1_controls = [pygame.K_s,
+                    pygame.K_w,
+                    pygame.K_a,
+                    pygame.K_d,
+                    pygame.K_u,
+                    pygame.K_i,
+                    pygame.K_o]
+player_2_controls = [pygame.K_DOWN,
+                    pygame.K_UP,
+                    pygame.K_LEFT,
+                    pygame.K_RIGHT,
+                    pygame.K_b,
+                    pygame.K_n,
+                    pygame.K_m]
 
 
-
-class healthBar:
-
-    def __init__(self, p1Max, p2Max):
-        self.health_bar_length = 570
-        self.health_ratio_1 = self.health_bar_length / p1Max
-        self.health_ratio_2 = self.health_bar_length / p2Max
-        self.maximum_hp_1 = pygame.Rect(20,50, self.health_bar_length, 50)
-        self.maximum_hp_2 = pygame.Rect(690,50, self.health_bar_length, 50)
-        self.maximum_hp_2.right = 1280 - 20
-        self.p1HP = p1Max
-        self.p2HP = p2Max
-
-       
-    def draw(self):
-        
-        pygame.draw.rect(WIN, RED, self.maximum_hp_1)
-        pygame.draw.rect(WIN, RED, self.maximum_hp_2)
-        length_1 = self.p1HP*self.health_ratio_1
-        pygame.draw.rect(WIN, YELLOW,(self.maximum_hp_1.right - length_1,50, length_1, 50))
-        length_2 = self.p2HP*self.health_ratio_2
-        pygame.draw.rect(WIN, YELLOW,(self.maximum_hp_2.left,50, length_2, 50))
 
 
 
 def main():
-    bar = healthBar(1170, 1170)
+    character = testchar.testChar(WIN.get_rect().centerx-400,400, player_1_controls)
+   
     clock = pygame.time.Clock()
     while True:
         WIN.fill(BLACK)
@@ -63,10 +59,40 @@ def main():
                 break
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
-                    bar.p1HP -= 100
-                if event.key == pygame.K_w:
-                    bar.p1HP += 100
-        bar.draw()
+                    
+                    character.place_hitbox('lariatA', 15, 30, 10, 150, 150, 110, 100, character, 'mid', 2, 1200)
+                    character.place_hitbox('lariatA', 15, 30, 10, 120, 90, 110, 190, character, 'mid', 2, 1200)
+                    character.place_hitbox('lariatA', 15, 30, 10, 240, 90, 130, 100, character, 'mid', 2, 1200)
+                    character.place_hitbox('lariatA', 15, 30, 10, 150, 10, 130, 70, character, 'mid', 2, 1200)
+
+                    
+                    
+        character.animController(WIN)
+        character.draw(WIN)
+        for hurtbox in character.hurtboxes:
+            hurtbox.draw(WIN)
+        for attack in list(character.hitboxes.keys()):
+                for hitbox in character.hitboxes[attack]:
+                    hitbox.timer(character)
+                    if hitbox.time >= hitbox.duration:
+                        character.hitboxes[attack].remove(hitbox)
+        for attack in character.hitboxes:
+            for hitbox in character.hitboxes[attack]:
+                hitbox.draw(WIN)
+        
+        character.state = testchar.lariatKojima(character)
+        character.state.timer = 12
+        #print(character.state.timer)
+        character.hurtboxes = [sneed2.Hurtbox(character,100, 140,character.directionFlip(30),160),
+                               sneed2.Hurtbox(character,240, 190,character.directionFlip(20),-20),
+                               sneed2.Hurtbox(character,170, 100,character.directionFlip(40),120),
+                              
+                        
+                             ]
+
+        for hb in character.hurtboxes:
+            hb.update_pos(character)
+        
         SCREEN.blit(WIN, (0,0))
         pygame.display.flip()
         clock.tick(FPS)

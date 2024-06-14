@@ -10,3 +10,4 @@ class Background:
         self.bg_rect.bottom = WIN.get_rect().bottom
     def draw(self, WIN):
         WIN.blit(self.bg_image,self.bg_rect)
+        
