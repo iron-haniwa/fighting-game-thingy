@@ -135,8 +135,8 @@ def main(player1char, player2char):
 
 
     healthbars = healthBarclass.healthBar(player1.maximum_health, player2.maximum_health)
-    pygame.mixer.music.load("C:/Users/bcarey65_s/Desktop/CompSci Grade 12/fighting-game-thingy-main/Beat.flac")  
-    pygame.mixer.music.play(loops=-1)
+    # pygame.mixer.music.load("C:/Users/bcarey65_s/Desktop/CompSci Grade 12/fighting-game-thingy-main/Beat.flac")  
+    # pygame.mixer.music.play(loops=-1)
 
     while True:      
 

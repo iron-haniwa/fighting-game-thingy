@@ -233,6 +233,11 @@ class Player:
         if self.rect.bottom > FLOOR:
             ##print('whar')
             self.rect.bottom = FLOOR
+
+        if self.rect.right > 1280:
+            self.rect.right = 1280
+        if self.rect.left < 0:
+            self.rect.left = 0
         
         self.absrect.bottom = self.rect.bottom
         for attack in list(self.hitboxes.keys()):
@@ -240,6 +245,7 @@ class Player:
                     hitbox.timer(self)
         for hb in self.hurtboxes:
             hb.update_pos(self)
+        
         
     def gravity(self, factor=1):
         self.yvel += GRAVITY * factor
