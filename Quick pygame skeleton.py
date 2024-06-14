@@ -18,8 +18,25 @@ RED = (255, 0, 0)
 PURPLE = (125,0,225)
 YELLOW = (255,255,0)
 
+YOFFSET = 0
 GRAVITY = 2
 JUMP = 40
+
+FLOOR = HEIGHT - 50
+player_1_controls = [pygame.K_s,
+                    pygame.K_w,
+                    pygame.K_a,
+                    pygame.K_d,
+                    pygame.K_u,
+                    pygame.K_i,
+                    pygame.K_o]
+player_2_controls = [pygame.K_DOWN,
+                    pygame.K_UP,
+                    pygame.K_LEFT,
+                    pygame.K_RIGHT,
+                    pygame.K_b,
+                    pygame.K_n,
+                    pygame.K_m]
 
 
 
