@@ -54,6 +54,11 @@ PURPLE = (125,0,225)
 WHITE = (255, 255, 255)
 BLACK = (0,0,0)
 
+
+character_dict = {'Shiki':testchar.testChar,
+                  'Test':p.Player}
+
+
 def draw(player1, player2, healthbars, bg):
     WIN.fill(BLACK)
     bg.draw(WIN, player1, player2)
@@ -70,7 +75,7 @@ def draw(player1, player2, healthbars, bg):
         for hitbox in player1.hitboxes[attack]:
             hitbox.draw(WIN)
     for attack in player2.hitboxes:
-        for hitbox in player1.hitboxes[attack]:
+        for hitbox in player2.hitboxes[attack]:
             hitbox.draw(WIN)
     
     
@@ -116,14 +121,14 @@ def collisionHandling(player1, player2):
 
 
 
-def main():
+def main(player1char, player2char):
     hitstop = False
     clock = pygame.time.Clock()
     hitstopTimer = 0
     hitstop_len = 0
 
-    player1 = testchar.testChar(WIN.get_rect().centerx-400,HEIGHT/2, player_1_controls)
-    player2 = p.Player(WIN.get_rect().centerx+400,HEIGHT/2, player_2_controls, False)
+    player1 = character_dict[player1char](WIN.get_rect().centerx-400,FLOOR, player_1_controls)
+    player2 = character_dict[player2char](WIN.get_rect().centerx+400,FLOOR, player_2_controls, False)
     bg = Background('wafflehousenight.webp', WIDTH, HEIGHT, WIN)
     camera = cameracontrols.Camera(bg.bg_rect.w, bg.bg_rect.h)
     player1.rect.right = WIN.get_rect().centerx-400
@@ -142,7 +147,7 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-                
+                break
             if event.type == HITSTOP:
                 hitstop = True
             if event.type == pygame.KEYDOWN:
@@ -154,21 +159,21 @@ def main():
         if hitstop == False:
             
             
-            player1.loop(player2, keys)
-            player2.loop(player1, keys)
+            player1.loop(player2, keys, WIN)
+            player2.loop(player1, keys, WIN)
             hitstop_len = collisionHandling(player1, player2)
             #print(player2.hitboxes)
             for attack in list(player1.hitboxes.keys()):
                 for hitbox in player1.hitboxes[attack]:
-                    hitbox.timer(player1)
                     if hitbox.time >= hitbox.duration:
-                        player1.hitboxes[attack].remove(hitbox)
+                        for hitbox in player1.hitboxes[attack]:
+                            player1.hitboxes[attack].remove(hitbox)
             #print(player2.hitboxes)
             for attack in list(player2.hitboxes.keys()):
-                for hitbox in player1.hitboxes[attack]:
-                    hitbox.timer(player2)
+                for hitbox in player2.hitboxes[attack]:
                     if hitbox.time >= hitbox.duration:
-                        player2.hitboxes[attack].remove(hitbox)
+                        for hitbox in player2.hitboxes[attack]:
+                            player2.hitboxes[attack].remove(hitbox)
             for attack in list(player1.hitboxes.keys()):
                 if any(player1.hitboxes[attack]) == False:
                     del player1.hitboxes[attack]
@@ -177,8 +182,8 @@ def main():
                     del player2.hitboxes[attack]
             
         else:
-            print(hitstopTimer)
-            print(hitstop_len)
+            #print(hitstopTimer)
+            #print(hitstop_len)
             if hitstopTimer < hitstop_len:
                 hitstopTimer += 1
             else:
@@ -193,4 +198,6 @@ def main():
         camera.cameraupdate(player1, player2, WIN)
         #print(player1.IsJump)
         clock.tick(FPS)
-main()
+
+if __name__ == '__main__':    
+    main('Shiki', 'Shiki')
