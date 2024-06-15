@@ -54,15 +54,44 @@ PURPLE = (125,0,225)
 WHITE = (255, 255, 255)
 BLACK = (0,0,0)
 
+#coin toss for which stage you play on. 
+#Stages have no gameplay difference (as is the case with any fighting game that isn't called Super Smash Bros), it's just a different background
+stage = random.randint(1,2)
+if stage == 1:
+    sky = pygame.image.load("assets/stage/moonlitSky.png")
+    sky = pygame.transform.scale(sky, (1280,720))
+    grass = pygame.image.load("assets/stage/grass.png")
+    grass = pygame.transform.scale(grass, (1280,140))
+    grass.set_colorkey((255,0,255))
+    grass_rect = grass.get_rect()
+    grass_rect.centerx = WIN.get_rect().centerx
+    grass_rect.bottom = WIN.get_rect().bottom
+if stage == 2:
+    earth = pygame.image.load("assets/stage/earth.png")
+    earth = pygame.transform.scale(earth, (1280,720))
+    tile = pygame.image.load("assets/stage/tilefloor.png")
+    tile = pygame.transform.scale(tile, (1280,140))
+    tile_rect = tile.get_rect()
+    tile_rect.centerx = WIN.get_rect().centerx
+    tile_rect.bottom = WIN.get_rect().bottom
 
+#this character dictionary allows for 
 character_dict = {'Shiki':testchar.testChar,
-                  'Test':p.Player}
+                  'Satsuki':p.Player}
 
 
 def draw(player1, player2, healthbars, bg):
     WIN.fill(BLACK)
     bg.draw(WIN, player1, player2)
-
+    if stage == 1:
+        WIN.blit(sky, (0,0))
+    if stage == 2: 
+        WIN.blit(earth, (0,0))
+    bg.draw(WIN, player1, player2)
+    if stage == 1:
+        WIN.blit(grass, grass_rect)
+    if stage == 2:
+        WIN.blit(tile, tile_rect)
     #player1.draw(WIN)
     #player2.draw(WIN)
 
@@ -126,17 +155,43 @@ def main(player1char, player2char):
     clock = pygame.time.Clock()
     hitstopTimer = 0
     hitstop_len = 0
-
+    #character positions are given an offset so that they spawn on opposite sides of the center
     player1 = character_dict[player1char](WIN.get_rect().centerx-400,FLOOR, player_1_controls)
     player2 = character_dict[player2char](WIN.get_rect().centerx+400,FLOOR, player_2_controls, False)
-    bg = Background('wafflehousenight.webp', WIDTH, HEIGHT, WIN)
+    if stage == 1:
+        bg = Background('assets/stage/tower.png', WIDTH, HEIGHT, WIN)
+    if stage == 2:
+        bg = Background('assets/stage/palace.png', WIDTH, HEIGHT, WIN)
     camera = cameracontrols.Camera(bg.bg_rect.w, bg.bg_rect.h)
     player1.rect.right = WIN.get_rect().centerx-400
 
 
     healthbars = healthBarclass.healthBar(player1.maximum_health, player2.maximum_health)
-    # pygame.mixer.music.load("C:/Users/bcarey65_s/Desktop/CompSci Grade 12/fighting-game-thingy-main/Beat.flac")  
-    # pygame.mixer.music.play(loops=-1)
+
+
+    #RNG to decide which song plays during the fight
+    battlesong = random.randint(1,7)
+    if battlesong == 1:
+        pygame.mixer.music.load("assets/music/Beat.mp3")  
+        pygame.mixer.music.play(loops=-1)
+    elif battlesong == 2:
+        pygame.mixer.music.load("assets/music/Mystic Eyes Awakening.mp3")  
+        pygame.mixer.music.play(loops=-1)
+    elif battlesong == 3:
+        pygame.mixer.music.load("assets/music/Light and Darkness.mp3")  
+        pygame.mixer.music.play(loops=-1)
+    elif battlesong == 4:
+        pygame.mixer.music.load("assets/music/Crimson Chapel.mp3")  
+        pygame.mixer.music.play(loops=-1)
+    elif battlesong == 5:
+        pygame.mixer.music.load("assets/music/Burly Heart.mp3")  
+        pygame.mixer.music.play(loops=-1)
+    elif battlesong == 6:
+        pygame.mixer.music.load("assets/music/Holy Orders.mp3")  
+        pygame.mixer.music.play(loops=-1)
+    elif battlesong == 7:
+        pygame.mixer.music.load("assets/music/Yu's Theme.mp3")  
+        pygame.mixer.music.play(loops=-1)
 
     while True:      
 
@@ -195,6 +250,7 @@ def main(player1char, player2char):
 
         
         draw(player1,player2,healthbars,bg)
+        #this calls the cameraupdate function to keep the boundaries
         camera.cameraupdate(player1, player2, WIN)
         #print(player1.IsJump)
         clock.tick(FPS)
