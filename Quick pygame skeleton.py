@@ -1,4 +1,4 @@
-import pygame, sys, random, colour
+import pygame, sys, random, colour, sneed2, testchar, Sacchin
 pygame.init()
 pygame.font.init()
 
@@ -19,9 +19,9 @@ PURPLE = (125,0,225)
 YELLOW = (255,255,0)
 
 YOFFSET = 0
+
 GRAVITY = 2
 JUMP = 40
-
 FLOOR = HEIGHT - 50
 player_1_controls = [pygame.K_s,
                     pygame.K_w,
@@ -40,32 +40,11 @@ player_2_controls = [pygame.K_DOWN,
 
 
 
-class healthBar:
-
-    def __init__(self, p1Max, p2Max):
-        self.health_bar_length = 570
-        self.health_ratio_1 = self.health_bar_length / p1Max
-        self.health_ratio_2 = self.health_bar_length / p2Max
-        self.maximum_hp_1 = pygame.Rect(20,50, self.health_bar_length, 50)
-        self.maximum_hp_2 = pygame.Rect(690,50, self.health_bar_length, 50)
-        self.maximum_hp_2.right = 1280 - 20
-        self.p1HP = p1Max
-        self.p2HP = p2Max
-
-       
-    def draw(self):
-        
-        pygame.draw.rect(WIN, RED, self.maximum_hp_1)
-        pygame.draw.rect(WIN, RED, self.maximum_hp_2)
-        length_1 = self.p1HP*self.health_ratio_1
-        pygame.draw.rect(WIN, YELLOW,(self.maximum_hp_1.right - length_1,50, length_1, 50))
-        length_2 = self.p2HP*self.health_ratio_2
-        pygame.draw.rect(WIN, YELLOW,(self.maximum_hp_2.left,50, length_2, 50))
-
 
 
 def main():
-    bar = healthBar(1170, 1170)
+    character = Sacchin.satsukichan(WIN.get_rect().centerx-400,400, player_1_controls)
+   
     clock = pygame.time.Clock()
     while True:
         WIN.fill(BLACK)
@@ -80,13 +59,42 @@ def main():
                 break
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
-                    bar.p1HP -= 100
-                if event.key == pygame.K_w:
-                    bar.p1HP += 100
-        bar.draw()
+                    
+
+                    character.place_hitbox('jB', 15, 0, 2, 130, 210, 180, 80, character, 'high', 2, 500)
+                    character.place_hitbox('jB', 15, 0, 2, 240,  200, 90, 90, character, 'high', 2, 500)
+                    character.place_hitbox('jB', 15, 0, 2, 90,  130, 170, 70, character, 'high', 2, 500)
+                    
+                    
+                    
+
+                    
+                    
+        character.animController(WIN)
+        character.draw(WIN)
+        for hurtbox in character.hurtboxes:
+            hurtbox.draw(WIN)
+        for attack in list(character.hitboxes.keys()):
+                for hitbox in character.hitboxes[attack]:
+                    hitbox.timer(character)
+                    if hitbox.time >= hitbox.duration:
+                        character.hitboxes[attack].remove(hitbox)
+        for attack in character.hitboxes:
+            for hitbox in character.hitboxes[attack]:
+                hitbox.draw(WIN)
+        
+        character.state = Sacchin.attackjB(character)
+        character.state.timer = 7
+        #print(character.state.timer)
+        character.hurtboxes = [sneed2.Hurtbox(character,140, 230,character.directionFlip(-10),140), 
+                               sneed2.Hurtbox(character,110, 140,character.directionFlip(-100),100),
+                               sneed2.Hurtbox(character,110, 50,character.directionFlip(100),50),]
+
+        for hb in character.hurtboxes:
+            hb.update_pos(character)
+        
         SCREEN.blit(WIN, (0,0))
         pygame.display.flip()
         clock.tick(FPS)
 
 main()
-

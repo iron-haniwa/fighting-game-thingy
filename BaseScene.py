@@ -1,4 +1,4 @@
-import pygame, sys, random, colour, collections, healthBarclass, cameracontrols
+import pygame, sys, random, colour, collections, healthBarclass, cameracontrols, Sacchin
 import sneed2 as p
 from backgroundClass import Background
 import pygame.freetype
@@ -6,7 +6,13 @@ import testchar
 pygame.init()
 pygame.font.init()
 
-le_font = pygame.font.SysFont('Arial', 64)
+
+
+
+
+
+le_font = pygame.font.SysFont('Futura', 140)
+
 
 HITSTOP = pygame.USEREVENT + 1
 hitstop_event = pygame.event.Event(HITSTOP)
@@ -56,7 +62,7 @@ BLACK = (0,0,0)
 
 
 character_dict = {'Shiki':testchar.testChar,
-                  'Test':p.Player}
+                  'Sacchin':Sacchin.satsukichan}
 
 
 def draw(player1, player2, healthbars, bg):
@@ -82,10 +88,15 @@ def draw(player1, player2, healthbars, bg):
     player2.draw(WIN)
     healthbars.draw(WIN, player1.current_health, player2.current_health)
 
-    text_surface = le_font.render(f'{type(player1.state).__name__}', False, BLACK)
-    text_surface2 = le_font.render(f'{player1.direction}', False, BLACK)
-    WIN.blit(text_surface,(0,0))
-    WIN.blit(text_surface2,(0,30))
+
+    if not player1.alive or not player2.alive:
+        
+        text_surface3 = le_font.render('K.O.', False, WHITE)
+       
+
+        WIN.blit(text_surface3, ((WIN.get_rect().centerx) - (text_surface3.get_rect().w/2), (WIN.get_rect().centery) - (text_surface3.get_rect().h/2)))
+
+    
     SCREEN.blit(pygame.transform.scale(WIN, SCREEN.get_rect().size), (0, 0))
     pygame.display.flip()
 
@@ -137,10 +148,10 @@ def main(player1char, player2char):
     healthbars = healthBarclass.healthBar(player1.maximum_health, player2.maximum_health)
     # pygame.mixer.music.load("C:/Users/bcarey65_s/Desktop/CompSci Grade 12/fighting-game-thingy-main/Beat.flac")  
     # pygame.mixer.music.play(loops=-1)
-
+    endTimer = 0
     while True:      
 
-
+        
         keys = pygame.key.get_pressed()
         events = pygame.event.get()
         for event in events:
@@ -190,14 +201,19 @@ def main(player1char, player2char):
                 hitstopTimer = 0
                 hitstop = False
 
+        if not player1.alive or not player2.alive:
+            endTimer += 1
 
-
-
+        if endTimer >=600:
+            pygame.quit()
+            sys.exit()
+            break
+        
         
         draw(player1,player2,healthbars,bg)
         camera.cameraupdate(player1, player2, WIN)
-        #print(player1.IsJump)
-        clock.tick(FPS)
+        
+        clock.tick(FPS/1)
 
 if __name__ == '__main__':    
-    main('Shiki', 'Shiki')
+    main('Shiki', 'Sacchin')

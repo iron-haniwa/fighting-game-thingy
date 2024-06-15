@@ -273,7 +273,7 @@ class testChar(sneed2.Player):
             self.image = self.anims['crouchBlock'][int(self.animIndex)]
             self.imagenew = self.image.get_rect(centerx = self.rect.centerx, bottom = self.rect.bottom + 100)
 
-        elif isinstance(self.state, sneed2.KDtumble):
+        elif isinstance(self.state, (sneed2.KDtumble, sneed2.deathFall)):
             if self.state.timer == 0:
                 self.animIndex = 0
             else:
@@ -306,6 +306,11 @@ class testChar(sneed2.Player):
             
             self.image = self.anims['getUp'][int(self.animIndex)]
             self.imagenew = self.image.get_rect(centerx = self.rect.centerx, bottom = self.rect.bottom + 100)
+        elif isinstance(self.state, sneed2.dead):
+            self.animIndex = 0
+            
+            self.image = self.anims['getUp'][int(self.animIndex)]
+            self.imagenew = self.image.get_rect(centerx = self.rect.centerx, bottom = self.rect.bottom + 100)    
 
         elif isinstance(self.state, sneed2.soft_KD):
             
