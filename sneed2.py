@@ -109,7 +109,7 @@ class Player:
         self.cancelNow = False
         self.cancelwindow = 5
         self.prorationList = []
-        
+        self.alive = True
         
 
         self.floor = ypos
@@ -165,7 +165,7 @@ class Player:
         for i in hitbox.properties:
             if 'HK' in i:
                 self.state = KDtumble(0, self)
-            if 'L' in i:
+            elif 'L' in i:
                 self.yvel -= hitbox.ykb
                 self.state = airStun(hitbox.kb/3, self, True)
 
@@ -319,6 +319,11 @@ class Player:
                 self.hitboxes[KEY] = [Hitbox(xkb,ykb,dur,-xoff,yoff,w,h,self,height,level,damage, KEY,properties)]
 
     def loop(self, thingy, keys, WIN):
+
+
+        if self.alive and self.current_health <= 0:
+            self.alive = False
+            self.state = deathFall(20, self)
         
         for attack in self.hitboxes:
     
@@ -674,7 +679,7 @@ class Blockstun:
         character.animIndex = 0
     def enter_state(self, character, inputs):
         if self.timer == self.length:
-            if 'downleft' or 'down' in inputs.currentInput:
+            if 'downleft'  in inputs.currentInput or 'down' in inputs.currentInput:
                     return Crouch()
             else:
                 return Idle()
@@ -703,7 +708,8 @@ class cHitstun:
         character.animIndex = 0
     def enter_state(self, character, inputs):
         if self.timer == self.length:
-            if 'down' or 'downleft' in inputs.currentInput:
+            if 'down' in inputs.currentInput or 'downleft' in inputs.currentInput:
+                    character.rect.bottom = FLOOR
                     return Crouch()
             else:
                 return Idle()
@@ -760,11 +766,25 @@ class KDtumble:
         character.do_friction(0.5)
         self.timer += 1 
 
+class deathFall(KDtumble):
+    def __init__(self, xknockback, character):
+        super().__init__(xknockback, character)
+        character.hurtboxes = []
+    def enter_state(self, character, *args):
+        if character.rect.bottom == FLOOR and self.timer > 36:
+            return dead(character)
+    def update(self, character, inputs):
+
+        character.gravity()
+        character.do_friction(0.5)
+        self.timer += 1 
+
 
 class airStun:
     def __init__(self,xknockback,character, yknockback=False):
         self.timer = 0
         character.xvel -= xknockback
+        character.animIndex = 0
         
         
         
@@ -807,6 +827,15 @@ class hard_KD:
 
 
         self.timer += 1 
+class dead(hard_KD):
+    
+    def enter_state(self, character, *args):
+        pass
+
+    def update(self, character, inputs):
+        character.animIndex = 0
+        character.do_friction()
+        character.gravity()
 
 
 class Hitbox:
