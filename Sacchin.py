@@ -9,22 +9,24 @@ YOFFSET = 55
 
 FLOOR = 720 - 50
 
-sacchinScale = 3.3
-sacchinOffset = 75
+sacchinScale = 3.3 # This trio of variable exist because the Street Fighter III 3rd Strike sprites have a different scale 
+sacchinOffset = 75 # And offset from the Melty Blood Type Lumina sprites used with Shiki, so I offset and scale everything by these values
 sacchinOffset2 = - 30
 
 
 
-# This is the character file for the game's second character, because I have 40 minutes to submit this, read testChar instead, it's pretty much the same thing
+# This is the character file for the game's second character Akuma, because I have 40 minutes to submit this, read testChar instead, it's pretty much the same thing
 
 
 
 
 class satsukichan(sneed2.Player):
-    def __init__(self, xpos, ypos, controls, stfu=True):
-        super().__init__(xpos, ypos, controls, stfu)
+    def __init__(self, xpos, ypos, controls):
+        super().__init__(xpos, ypos, controls)
         self.defaultHB = sneed2.Hurtbox(self,140, 390,0,80)
         self.crouchHB = sneed2.Hurtbox(self,140, 250,0,10)
+        self.current_health = 11700 /1.5
+        self.maximum_health = 11700 /1.5
         self.jumpLimit = 2
         self.image = pygame.image.load('assets\characters\Satsuki\SF3_3S_Gouki_21505.png')
         self.anims = {'Idle':[], 'fWalk':[], 'bWalk':[],'Crouch':[],'Jump':[], 'backDash':[], 'Dash':[], 'airDash':[], 'dashFall':[],'endDash':[], 'startCrouch':[],
@@ -40,72 +42,72 @@ class satsukichan(sneed2.Player):
         self.dashFactor = 4
         for i in range(5):
             
-            self.anims['Idle'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21505}.png'), sacchinScale))
+            self.anims['Idle'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21505}.png'), sacchinScale).convert())
         self.anims['Idle'].extend(self.anims['Idle'][::-1])
         for i in range(10):
-            self.anims['fWalk'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21520}.png'), sacchinScale))
+            self.anims['fWalk'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21520}.png'), sacchinScale).convert())
         for i in range(10):
-            self.anims['bWalk'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21532}.png'), sacchinScale))
+            self.anims['bWalk'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21532}.png'), sacchinScale).convert())
         for i in range(4):
-            self.anims['startCrouch'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21544}.png'), sacchinScale))
+            self.anims['startCrouch'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21544}.png'), sacchinScale).convert())
         for i in range(4):
-            self.anims['Crouch'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21552}.png'), sacchinScale))
+            self.anims['Crouch'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21552}.png'), sacchinScale).convert())
         for i in range(11):
-            self.anims['Jump'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21568}.png'), sacchinScale))
+            self.anims['Jump'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21568}.png'), sacchinScale).convert())
         for i in range(8):
-            self.anims['backDash'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21632}.png'), sacchinScale))
+            self.anims['backDash'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21632}.png'), sacchinScale).convert())
         self.anims['endCrouch'] = self.anims['startCrouch'][::-1]
         
         for i in range(2):
-            self.anims['Dash'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22256}.png'), sacchinScale))
+            self.anims['Dash'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22256}.png'), sacchinScale).convert())
         for i in range(2):
-            self.anims['airDash'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22256}.png'), sacchinScale))
+            self.anims['airDash'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22256}.png'), sacchinScale).convert())
 
         for i in range(5):
-            self.anims['standHit'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21658}.png'), sacchinScale))
+            self.anims['standHit'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21658}.png'), sacchinScale).convert())
         for i in range(4):
-            self.anims['crouchHit'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21709}.png'), sacchinScale))
+            self.anims['crouchHit'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21709}.png'), sacchinScale).convert())
         for i in range(4):
-            self.anims['standBlock'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21599}.png'), sacchinScale))
+            self.anims['standBlock'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21599}.png'), sacchinScale).convert())
         for i in range(5):
-            self.anims['crouchBlock'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21603}.png'), sacchinScale))
+            self.anims['crouchBlock'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21603}.png'), sacchinScale).convert())
 
 
         for i in range(6):
-            self.anims['2A'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22032}.png'), sacchinScale))
+            self.anims['2A'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22032}.png'), sacchinScale).convert())
         for i in range(5):
-            self.anims['5A'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21856}.png'), sacchinScale))
+            self.anims['5A'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21856}.png'), sacchinScale).convert())
         for i in range(6):
-            self.anims['jA'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22064}.png'), sacchinScale))
+            self.anims['jA'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22064}.png'), sacchinScale).convert())
 
         for i in range(9):
-            self.anims['2B'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22012}.png'), sacchinScale))
+            self.anims['2B'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22012}.png'), sacchinScale).convert())
         for i in range(6):
-            self.anims['5B'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21895}.png'), sacchinScale))  
+            self.anims['5B'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21895}.png'), sacchinScale).convert())  
         for i in range(8):
-            self.anims['jB'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22094}.png'), sacchinScale))
+            self.anims['jB'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22094}.png'), sacchinScale).convert())
         for i in range(10):
-            self.anims['2C'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22044}.png'), sacchinScale))
+            self.anims['2C'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22044}.png'), sacchinScale).convert())
         for i in range(4):
             self.anims['start5C'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 30}.png'))
         for i in range(13):
-            self.anims['5C'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21936}.png'), sacchinScale))
+            self.anims['5C'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21936}.png'), sacchinScale).convert())
         for i in range(13):
-            self.anims['jC'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22117}.png'), sacchinScale))
+            self.anims['jC'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 22117}.png'), sacchinScale).convert())
 
             
         for i in range(5):
-            self.anims['kdTumble'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21764}.png'), sacchinScale))
+            self.anims['kdTumble'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21764}.png'), sacchinScale).convert())
         for i in range(3):
-            self.anims['kdTumble'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21760}.png'), sacchinScale))
-        self.anims['kdTumble'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21750}.png'), sacchinScale))
-        self.anims['getUp'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21750}.png'), sacchinScale))
+            self.anims['kdTumble'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21760}.png'), sacchinScale).convert())
+        self.anims['kdTumble'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21750}.png'), sacchinScale).convert())
+        self.anims['getUp'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21750}.png'), sacchinScale).convert())
         for i in range(11):
-            self.anims['getUp'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21824}.png'), sacchinScale))
+            self.anims['getUp'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21824}.png'), sacchinScale).convert())
         for i in range(16):
-            self.anims['airStun'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21792}.png'), sacchinScale))
+            self.anims['airStun'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21792}.png'), sacchinScale).convert())
         for i in range(11):
-            self.anims['quickUp'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21824}.png'), sacchinScale))
+            self.anims['quickUp'].append(pygame.transform.scale_by(pygame.image.load(f'assets\characters\Satsuki\SF3_3S_Gouki_{i + 21824}.png'), sacchinScale).convert())
 
 
         self.animIndex = 0
@@ -115,35 +117,21 @@ class satsukichan(sneed2.Player):
 
     def process_inputs(self, player2):
         self.move = self.moveReader.commandReader(self, self.inputBuffer.inputBuffer)
-        #print(self.inputBuffer.currentInput)
+        
         if self.move == 'Dash':
-            #print('guh')
+           
             if isinstance(self.state, sneed2.Jump):
                 if self.amountDashed < self.dashLimit:
                     self.state = sneed2.airDash(self)
             elif isinstance(self.state, sneed2.Idle) or isinstance(self.state, sneed2.forwardWalk):
                 self.state = sneed2.Dash()
         if self.move == 'bDash':
-            #print('guh')
+          
             if isinstance(self.state, sneed2.Idle) or isinstance(self.state, sneed2.backWalk):
                 self.state = sneed2.backDash()
             elif isinstance(self.state, sneed2.Jump):
                 if self.amountDashed < self.dashLimit:
                     self.state = sneed2.airbDash(self)
-        if self.move == 'Tatsumaki':
-            if isinstance(self.state, (sneed2.Idle, sneed2.forwardWalk, sneed2.backWalk)):
-                self.state = sigmaSlide(self)
-            elif isinstance(self.state, normals):
-                if self.cancelNow:
-                    if self.move not in player2.currentCombo:
-                        self.state = sigmaSlide(self)
-        if self.move == 'Hadouken':
-            if isinstance(self.state, (sneed2.Idle, sneed2.forwardWalk, sneed2.backWalk)):
-                self.state = lariatKojima(self)
-            elif isinstance(self.state, normals):
-                if self.cancelNow:
-                    if self.move not in player2.currentCombo:
-                        self.state = lariatKojima(self)
         if self.move == '5A':
             if isinstance(self.state, (sneed2.Idle, sneed2.forwardWalk, sneed2.backWalk)):
                 
@@ -214,7 +202,7 @@ class satsukichan(sneed2.Player):
         
         if isinstance(self.state, sneed2.Idle):
             if self.state.endDash == True:
-                #print('waht')
+                
                 self.animIndex = 1
 
                 
@@ -520,23 +508,9 @@ class satsukichan(sneed2.Player):
             
             self.image = self.anims['2C'][int(self.animIndex)]
             self.imagenew = self.image.get_rect(centerx = self.rect.centerx + sacchinOffset2, bottom = self.rect.bottom + sacchinOffset)
-        
-        elif isinstance(self.state, startup5C):
-            #print(len(self.anims['start5C']))
-            if self.state.timer > 9:
-                self.animIndex += 0.25
-            elif self.state.timer == 5:
-                self.animIndex = 7
-            elif self.state.timer > 10:
-                self.animIndex += 0.25
-            if self.animIndex >= len(self.anims['start5C']):
-                self.animIndex = 0
-            
-            self.image = self.anims['start5C'][int(self.animIndex)]
-            self.imagenew = self.image.get_rect(centerx = self.rect.centerx + sacchinOffset2, bottom = self.rect.bottom + sacchinOffset)
 
         elif isinstance(self.state, attack5C):
-            #print(len(self.anims['5C']))
+           
             if self.state.timer < 9:
                 self.animIndex += 0.25
             elif self.state.timer >= 9 and self.state.timer <= 14:
@@ -558,59 +532,13 @@ class satsukichan(sneed2.Player):
                 self.animIndex += 0.5
 
             if self.animIndex >= len(self.anims['jC']):
-                #print(self.state.timer)
+                
                 self.animIndex = len(self.anims['jC']) - 1
             
             self.image = self.anims['jC'][int(self.animIndex)]
             self.imagenew = self.image.get_rect(centerx = self.rect.centerx + sacchinOffset2, bottom = self.rect.bottom + sacchinOffset)
 
-        elif isinstance(self.state, sigmaSlide):
-            #print(len(self.anims['5C']))
-            if self.state.timer < 7:
-                self.animIndex += 0.25
-            if self.state.timer == 7:
-                self.animIndex = 5
-            elif self.state.timer > 7 and self.state.timer <= 20:
-                #print(self.animIndex)
-                self.animIndex += 0.3
-                if self.animIndex > 7:
-                 self.animIndex = 5
-            else: 
-                self.animIndex += 0.25
-                if self.animIndex >= len(self.anims['sigmaSlide']):
-                    
-                    self.animIndex = len(self.anims['sigmaSlide']) - 1
-            
-            
-            self.image = self.anims['sigmaSlide'][int(self.animIndex)]
-            self.imagenew = self.image.get_rect(centerx = self.rect.centerx + sacchinOffset2, bottom = self.rect.bottom + sacchinOffset)
-        elif isinstance(self.state, attack3C):
-            #print(len(self.anims['5C']))
-            if self.state.timer == 0:
-                self.animIndex += 0.3
-            elif self.state.timer == 10:
-                self.animIndex = 5
-            elif self.state.timer > 14:
-                self.animIndex += 0.25
-            if self.animIndex >= len(self.anims['3C']):
-                self.animIndex = len(self.anims['3C']) - 1
-            
-            self.image = self.anims['3C'][int(self.animIndex)]
-            self.imagenew = self.image.get_rect(centerx = self.rect.centerx + sacchinOffset2, bottom = self.rect.bottom + sacchinOffset)
-        elif isinstance(self.state, lariatKojima):
-            #print(len(self.anims['5C']))
-            if self.state.timer < 12:
-                self.animIndex += 0.3
-            elif self.state.timer == 12:
-                self.animIndex = 5
-            elif self.state.timer > 14:
-                self.animIndex += 0.3
-            if self.animIndex >= len(self.anims['lariat']):
-                self.animIndex = len(self.anims['lariat']) - 1
-            
-            self.image = self.anims['lariat'][int(self.animIndex)]
-            self.imagenew = self.image.get_rect(centerx = self.rect.centerx + sacchinOffset2, bottom = self.rect.bottom + sacchinOffset)
-
+    
     def animDraw(self, WIN):
         
         self.image.set_colorkey((248, 0, 248))
@@ -635,7 +563,7 @@ class attack2A:
     def enter_state(self,character,inputs):
         if self.timer >= 10:
             if character.move == '2A':
-                #print('cancel'+ str(self.timer))
+              
                 return attack2A(character)
         if self.timer == 15:
             return sneed2.Crouch()
@@ -644,7 +572,7 @@ class attack2A:
         character.hurtboxes = [sneed2.Hurtbox(character,140, 210,character.directionFlip(-10),-10),
                                sneed2.Hurtbox(character,110, 90,character.directionFlip(100),-70)]
         if self.timer == 6:
-            #print('duh')
+            
             character.place_hitbox('2A', 15, 0, 2, 100, 00, 100, 100, character, 'low', 1, 150)
             character.place_hitbox('2A', 15, 0, 2, 160, -70, 210, 100, character, 'low', 1, 150)
         self.timer += 1
@@ -656,7 +584,7 @@ class attack5A:
     def enter_state(self,character,inputs):
         if self.timer >= 8:
             if character.move == '5A':
-                print('cancel'+ str(self.timer))
+           
                 return attack5A(character)
         if self.timer == 11:
             return sneed2.Idle()
@@ -666,14 +594,14 @@ class attack5A:
                                sneed2.Hurtbox(character,60, 110,character.directionFlip(70),50),
                                sneed2.Hurtbox(character,80, 110,character.directionFlip(90),10)]
         if self.timer == 5:
-            #print('duh')
+           
             character.place_hitbox('5A', 15, 0, 3, 190, 150, 150, 100, character, 'mid', 2, 200)
             character.place_hitbox('5A', 15, 0, 3, 120, 160, 110, 150, character, 'mid', 2, 200)
        
 
         self.timer += 1
         character.do_friction()
-        #print(self.timer)
+       
 class attackjA:
     
     def __init__(self, character):
@@ -749,7 +677,7 @@ class attack5B:
             character.place_hitbox('5B', 20, 0, 4, 100, 30, 80, 60, self, 'mid', 2, 480)
         self.timer += 1
         character.do_friction()
-        #print(character.animIndex)
+        
 
 class attackjB:
     
@@ -795,23 +723,6 @@ class attack2C:
         self.timer += 1
 
 
-class startup5C:
-
-    def __init__(self, character):
-        character.animIndex = 0
-        self.timer = 0
-        self.release_received = False
-    def enter_state(self,character,inputs):
-        if self.timer >= 7 and self.release_received == True:
-            return attack5C(character)
-        if self.timer == 19:
-            return attack5C(character)
-        
-    def update(self,character,inputs):
-        character.hurtboxes = [sneed2.Hurtbox(character,140, 250,character.directionFlip(-10),10)]
-        if 'C' not in inputs.currentInput:
-            self.release_received = True
-        self.timer += 1
 
 
 class attack5C:
@@ -867,90 +778,6 @@ class attackjC:
         self.timer += 1
 
 
-class sigmaSlide:
-
-    def __init__(self, character):
-        character.animIndex = 0
-        self.timer = 0
-        self.release_received = False
-        character.xvel = 0
-    def enter_state(self,character,inputs):
-
-        if self.timer >= 7 and self.timer <= 20:
-            if character.move == '5A' or character.move == '5B' or character.move == '5C':
-                return attack3C(character)
-        if self.timer == 30:
-            return sneed2.Crouch()
-        
-    def update(self,character,inputs):
-        if self.timer >= 7 and self.timer <= 18:
-            character.move_forward(20)
-        if self.timer == 7:
-            character.place_hitbox('sigmaSlide', 15, 0, 10, 110, -70, 200, 90, character, 'low', 2, 620, 'AK')
-        character.hurtboxes = [sneed2.Hurtbox(character,140, 180,character.directionFlip(-120),-25),
-                               sneed2.Hurtbox(character,120, 140,character.directionFlip(-30),-45),
-                               sneed2.Hurtbox(character,200, 90,character.directionFlip(90),-70),
-                        
-                             ]
-        character.do_friction()
-        self.timer += 1
-
-class lariatKojima:
-
-    def __init__(self, character):
-        character.animIndex = 0
-        self.timer = 0
-        self.release_received = False
-        character.xvel = 0
-    def enter_state(self,character,inputs):
-
-        if self.timer == 34:
-            return sneed2.Crouch()
-        
-    def update(self,character,inputs):
-        if self.timer >= 7 and self.timer <= 18:
-            character.move_forward(20)
-        if self.timer == 12:
-            character.place_hitbox('lariatA', 15, 0, 3, 150, 150, 110, 100, character, 'mid', 2, 1200)
-            character.place_hitbox('lariatA', 15, 0, 3, 120, 90, 110, 190, character, 'mid', 2, 1200)
-            character.place_hitbox('lariatA', 15, 0, 3, 240, 90, 130, 100, character, 'mid', 2, 1200)
-            character.place_hitbox('lariatA', 15, 0, 3, 150, 10, 130, 70, character, 'mid', 2, 1200)
-        character.hurtboxes = [sneed2.Hurtbox(character,100, 140,character.directionFlip(30),160),
-                               sneed2.Hurtbox(character,240, 190,character.directionFlip(20),-20),
-                               sneed2.Hurtbox(character,170, 100,character.directionFlip(40),120),
-                              
-                        
-                             ]
-        character.do_friction()
-        self.timer += 1
-
-
-class attack3C:
-    def __init__(self, character):
-        self.timer = 0
-        character.animIndex = 0
-    def enter_state(self,character,inputs):
-
-        if self.timer == 39:
-            return sneed2.Idle()
-        
-    def update(self,character,inputs):
-        if self.timer == 15:
-            character.place_hitbox('3C', 15, 40, 10, 10, 270, 50, 140, character, 'mid', 2, 620, 'L')
-            character.place_hitbox('3C', 15, 40, 10, 60, 180, 110, 100, character, 'mid', 2, 620, 'L')
-            character.place_hitbox('3C', 15, 40, 10, 120, 90, 110, 190, character, 'mid', 2, 620, 'L')
-            character.place_hitbox('3C', 15, 40, 10, 170, 90, 110, 100, character, 'mid', 2, 620, 'L')
-            character.place_hitbox('3C', 15, 40, 10, 110, -60, 100, 110, character, 'mid', 2, 620, 'L')
-        character.do_friction()
-        character.hurtboxes = [sneed2.Hurtbox(character,100, 140,character.directionFlip(-90),-45),
-                               sneed2.Hurtbox(character,110, 240,character.directionFlip(10),5),
-                               sneed2.Hurtbox(character,120, 110,character.directionFlip(-10),150),
-                               sneed2.Hurtbox(character,50, 150,character.directionFlip(0),270),
-                        
-                             ]
-        
-        self.timer += 1
-
 
 
 normals = (attack2A, attack5A,
@@ -964,10 +791,3 @@ aerialnormals = (attackjA,
 
 )
 
-key_to_normal_map = {'attack2A': '2A', 'attack5A': '5A', 
-                     'attack2B': '2B', 'attack5B': '5B', 'attackjB': 'jB',
-                     'attack2C': '2C', 'attack5C': '5C', 'attackjC': 'jC'}
-
-proration_map = {'2A': 68, '5A': 70, 'jA': 75,
-                 '2B': 85, '2B-2':100 ,'5B': 90, 'jB': 81, 'jB-1':79,
-                 '2C': 55, '5C': 80, 'jC': 90}

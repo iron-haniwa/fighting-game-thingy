@@ -4,7 +4,7 @@ import pygame
 class Background:
 
     def __init__(self, bgname, WIDTH, HEIGHT, WIN):
-        self.bg_image = pygame.transform.scale(pygame.image.load(bgname).convert_alpha(), (WIDTH * 2,HEIGHT * 1.5))
+        self.bg_image = pygame.transform.scale(pygame.image.load(bgname), (WIDTH * 2,HEIGHT * 1.5)).convert()
         self.bg_image.set_colorkey((255,0,255))
         self.bg_rect = self.bg_image.get_rect()
         self.bg_rect.centerx = WIN.get_rect().centerx + 300

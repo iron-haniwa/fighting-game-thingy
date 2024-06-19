@@ -1,4 +1,4 @@
-import pygame, characterselect, os
+import pygame, characterselect, os, sys
 
 def titlescreen():
     WIDTH, HEIGHT = 1280, 720
@@ -22,7 +22,9 @@ def titlescreen():
     while looping:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                looping = False
+                pygame.quit()
+                sys.exit()
+                break
              
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:

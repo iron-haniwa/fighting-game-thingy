@@ -9,15 +9,26 @@ YOFFSET = 55
 
 FLOOR = 720 - 50
 
-
+# The actual player, this is a subclass that takes all the basic functions of the Player class, and adds on what is needed to make an individual character uses its roots.
 
 class testChar(sneed2.Player):
-    def __init__(self, xpos, ypos, controls, stfu=True):
-        super().__init__(xpos, ypos, controls, stfu)
+    def __init__(self, xpos, ypos, controls):
+        #Calls Player's init from sneed2
+        super().__init__(xpos, ypos, controls)
+        #Overrides the default boxes to suit he character
         self.defaultHB = sneed2.Hurtbox(self,140, 390,0,80)
         self.crouchHB = sneed2.Hurtbox(self,140, 250,0,10)
+        #Jumplimit override
         self.jumpLimit = 2
-        self.image = pygame.image.load('assets\characters\Shiki\shiki_0-0.png')
+        self.speed = 8
+        self.dashFactor = 3.5
+        #More character specific overrides
+        #creates a basic image var so things dont crash the first iteration
+        self.image = pygame.image.load('assets\characters\Shiki\shiki_0-0.png').convert()
+
+
+        #This is a dictionary holding all possible states for the character, which will correspond to lists of images containing all the graphics data for the character,
+        #The state machine system machines animation supremely easy as I can simply read the current state of the player, and animate accordingly
         self.anims = {'Idle':[], 'fWalk':[], 'bWalk':[],'Crouch':[],'Jump':[], 'backDash':[], 'Dash':[], 'airDash':[], 'dashFall':[],'endDash':[], 'startCrouch':[],
                       'endCrouch':[],
                       'standHit':[], 'crouchHit':[],
@@ -27,96 +38,105 @@ class testChar(sneed2.Player):
                       '2B':[],'5B':[], 'jB':[],
                       '2C':[], 'start5C':[], '5C':[], 'jC':[],
                       'sigmaSlide':[], '3C':[], 'lariat':[]}
-        self.speed = 8
-        self.dashFactor = 3.5
+        
+        #This unholy wall of for loops reads every character sprite needed and stores it in the dictionary under the appropriate tags using nested lists that have the sprite codes
+
         for i in range(15):
-            self.anims['Idle'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i}.png'))
+            self.anims['Idle'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i}.png').convert())
         for i in range(10):
-            self.anims['fWalk'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 320}.png'))
+            self.anims['fWalk'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 320}.png').convert())
         for i in range(12):
-            self.anims['bWalk'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 332}.png'))
-        self.anims['startCrouch'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{73}.png'))
-        self.anims['startCrouch'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{74}.png'))
+            self.anims['bWalk'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 332}.png').convert())
+        self.anims['startCrouch'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{73}.png').convert())
+        self.anims['startCrouch'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{74}.png').convert())
         for i in range(15):
-            self.anims['Crouch'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 105}.png'))
+            self.anims['Crouch'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 105}.png').convert())
         for i in range(8):
-            self.anims['Jump'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 120}.png'))
+            self.anims['Jump'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 120}.png').convert())
         for i in range(7):
-            self.anims['backDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 357}.png'))
+            self.anims['backDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 357}.png').convert())
         self.anims['endCrouch'] = self.anims['startCrouch'][::-1]
-        self.anims['backDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-362.png'))
-        self.anims['backDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-362.png'))
+        self.anims['backDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-362.png').convert())
+        self.anims['backDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-362.png').convert())
         for i in range(9):
-            self.anims['Dash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 344}.png'))
+            self.anims['Dash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 344}.png').convert())
         for i in range(4):
-            self.anims['endDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 353}.png'))
+            self.anims['endDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 353}.png').convert())
         for i in range(8):
-            self.anims['airDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 374}.png'))
+            self.anims['airDash'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 374}.png').convert())
         for i in range (2):
-            self.anims['dashFall'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 381}.png'))
+            self.anims['dashFall'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 381}.png').convert())
 
         for i in range(4):
-            self.anims['standHit'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 410}.png'))
+            self.anims['standHit'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 410}.png').convert())
         for i in range(4):
-            self.anims['crouchHit'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 415}.png'))
+            self.anims['crouchHit'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 415}.png').convert())
         for i in range(3):
-            self.anims['standBlock'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 387}.png'))
+            self.anims['standBlock'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 387}.png').convert())
         for i in range(3):
-            self.anims['crouchBlock'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 390}.png'))
+            self.anims['crouchBlock'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 390}.png').convert())
 
 
         for i in range(8):
-            self.anims['2A'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 75}.png'))
+            self.anims['2A'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 75}.png').convert())
         for i in range(7):
-            self.anims['5A'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 16}.png'))
+            self.anims['5A'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 16}.png').convert())
         for i in range(9):
-            self.anims['jA'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 128}.png'))
+            self.anims['jA'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 128}.png').convert())
 
         for i in range(12):
-            self.anims['2B'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 83}.png'))
+            self.anims['2B'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 83}.png').convert())
         for i in range(7):
-            self.anims['5B'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 23}.png'))    
+            self.anims['5B'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 23}.png').convert())    
         for i in range(10):
-            self.anims['jB'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 136}.png'))
+            self.anims['jB'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 136}.png').convert())
         for i in range(10):
-            self.anims['2C'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 95}.png'))
+            self.anims['2C'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 95}.png').convert())
         for i in range(4):
-            self.anims['start5C'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 30}.png'))
+            self.anims['start5C'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 30}.png').convert())
         for i in range(8):
-            self.anims['5C'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 33}.png'))
+            self.anims['5C'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 33}.png').convert())
         for i in range(11):
-            self.anims['jC'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 146}.png'))
+            self.anims['jC'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 146}.png').convert())
         for i in range(9):
-            self.anims['kdTumble'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 433}.png'))
+            self.anims['kdTumble'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 433}.png').convert())
         for i in range(4):
-            self.anims['getUp'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 454}.png'))
+            self.anims['getUp'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 454}.png').convert())
         for i in range(4):
-            self.anims['airStun'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 425}.png'))
+            self.anims['airStun'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 425}.png').convert())
         for i in range(4):
-            self.anims['quickUp'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 450}.png'))
+            self.anims['quickUp'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 450}.png').convert())
         for i in range(10):
-            self.anims['sigmaSlide'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 207}.png'))
+            self.anims['sigmaSlide'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 207}.png').convert())
         for i in range(12):
-            self.anims['3C'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 166}.png'))
+            self.anims['3C'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 166}.png').convert())
         for i in range(11):
-            self.anims['lariat'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 178}.png'))
+            self.anims['lariat'].append(pygame.image.load(f'assets\characters\Shiki\shiki_0-{i + 178}.png').convert())
+        #Defaults the anim index again
         self.animIndex = 0
 
         
 
 
     def process_inputs(self, player2):
+        
+        #This is the souped out input processor,
+        #With every actual attacking state, this reads the special move list and interrupts the current state with an attack one is detected
+        #while the player is in a valid state
+
         self.move = self.moveReader.commandReader(self, self.inputBuffer.inputBuffer)
-        #print(self.inputBuffer.currentInput)
+       
+
+
         if self.move == 'Dash':
-            #print('guh')
+            
             if isinstance(self.state, sneed2.Jump):
                 if self.amountDashed < self.dashLimit:
                     self.state = sneed2.airDash(self)
             elif isinstance(self.state, sneed2.Idle) or isinstance(self.state, sneed2.forwardWalk):
                 self.state = sneed2.Dash()
         if self.move == 'bDash':
-            #print('guh')
+            
             if isinstance(self.state, sneed2.Idle) or isinstance(self.state, sneed2.backWalk):
                 self.state = sneed2.backDash()
             elif isinstance(self.state, sneed2.Jump):
@@ -136,14 +156,20 @@ class testChar(sneed2.Player):
                 if self.cancelNow:
                     if self.move not in player2.currentCombo:
                         self.state = lariatKojima(self)
+
+        # I will comment just 5A, as pretty much everything is copypasted anyway,
+
+
         if self.move == '5A':
-            if isinstance(self.state, (sneed2.Idle, sneed2.forwardWalk, sneed2.backWalk)):
+            if isinstance(self.state, (sneed2.Idle, sneed2.forwardWalk, sneed2.backWalk)): # First, the input reader checks if the player is in a neutral state, 
+                                                                                           # in which case the light attack routine is ran regularly
                 
                 self.state = attack5A(self)
 
-            elif isinstance(self.state, normals):
-                if self.cancelNow:
-                    if player2.currentCombo.count(self.move) <= 3:
+            elif isinstance(self.state, normals):                   # Next comes Reverse Beat, if the player is currently in the middle of another normal attack.
+                                                                    # and that move has both already hit the opponent and the current move has not been performed, you can cancel the recovery into the new attack
+                if self.cancelNow:                                  # Anything can cancel into a command input, but they cannot cancel into anything
+                    if player2.currentCombo.count(self.move) <= 3:  # A attacks are the exception, as they can be cancelled into themselves up to 3 times
                         self.state = attack5A(self)
             elif isinstance(self.state, aerialnormals):
                 if self.cancelNow:
@@ -200,13 +226,20 @@ class testChar(sneed2.Player):
 
     def animController(self, WIN):
         
+        #This is the animation controller. It reads the current state, chooses the appropriate list of 
+        #sprites via the dictionary, and then displays them one typically while reading the players timer to know frame timing
+        #The actual index of the list is controlled via the "animIndex" variable, which serves as the current reading point and is constantly updated by the various different types of animation.
+        #In cases where I did not need to time specific frames of animation to specific frames of logic, I incremented the animIndex by decimal amounts to control the rate at which it increased,
+        #And converted it to an integer at the point in which it was used as an index, which automatically rounds the number.
+        
         
         if isinstance(self.state, sneed2.Idle):
-            if self.state.endDash == True:
-                #print('waht')
+            if self.state.endDash == True: # In some cases like the idle animation, I created special entry variables that play a different animation depending on the action you had just terminated,
+                                           # such as a stopping animation in this case, and then it reverts to regular Idle when the animation completes.
+                
                 self.animIndex += 0.25
 
-                if self.animIndex >= len(self.anims['endDash']):
+                if self.animIndex >= len(self.anims['endDash']): 
                     self.state.endDash = False
                     self.animIndex = len(self.anims['endDash']) -1 
                      
@@ -637,7 +670,11 @@ class testChar(sneed2.Player):
 
 
         
+# This section is much like the generic states section from Sneed2, as it is a field of the various attack states the player character can take
 
+# This are slighly unique as they all have timers and an exact predetermined course of action, where they spawn hitboxes and shift hurtboxes at guaranteed times,
+
+# Before returning you to normal or allowing special followups depending on the attack.
 
 
 class attack2A:
@@ -968,22 +1005,23 @@ class attack3C:
         
         self.timer += 1
 
-
+# Tuple with every kind of grounded normal, this exists for the isInstance logic of the Reverse Beat system to be able to detect whether or not you are performing an eligible move
 
 normals = (attack2A, attack5A,
            attack2B, attack5B,
            attack2C, attack5C,
            )
-
+# Same thing, but for aerials
 aerialnormals = (attackjA,
                  attackjB,
                  attackjC
 
 )
 
-key_to_normal_map = {'attack2A': '2A', 'attack5A': '5A', 
-                     'attack2B': '2B', 'attack5B': '5B', 'attackjB': 'jB',
-                     'attack2C': '2C', 'attack5C': '5C', 'attackjC': 'jC'}
+
+# For posterity, I keep this code, but this is the remnants of an unfortunately unimplemented system in Damage Proration,
+# The idea is that every attack has a proration value which is a percentage that decreases the damage of following attacks in a combo
+# Sadly, we ran out of time and were not able to fully implement it, so this stands as a final testament to what could have been.
 
 proration_map = {'2A': 68, '5A': 70, 'jA': 75,
                  '2B': 85, '2B-2':100 ,'5B': 90, 'jB': 81, 'jB-1':79,

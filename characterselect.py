@@ -1,4 +1,4 @@
-import pygame, BaseScene
+import pygame, BaseScene, sys
         
 def charselect():
     WIDTH, HEIGHT = 1280, 720
@@ -22,7 +22,9 @@ def charselect():
     while looping:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                looping = False
+                pygame.quit()
+                sys.exit()
+                break
              
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
@@ -57,10 +59,10 @@ def charselect():
                                 BaseScene.main(player1char, player2char)     
                         elif selected == buttons[1]:
                             if playerchoosing == 1:
-                                player1char = "Satsuki"
+                                player1char = "Sacchin"
                                 playerchoosing+=1
                             elif playerchoosing == 2:
-                                player2char = "Satsuki"
+                                player2char = "Sacchin"
                                 BaseScene.main(player1char, player2char)
 
         WIN.blit(selectBackground, (0,0))

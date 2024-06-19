@@ -1,0 +1,39 @@
+Here's a quick overview on how to play "No More Chunglers", one of the fighting games ever made.
+
+
+First, run titlescreen.py in VS Code. From there, use the left and right arrow keys to highlight an option, and press Z to select the currently-highlighted option. The character select screen works the same. 
+
+On the character select screen, either player can pick either character. You don't have to be Player 2 to pick "Satsuki", for example. You could even have two Shikis if you want.
+
+When both players pick their character, you'll move into the actual fight. 
+
+Here's the controls for battling:
+Player 1:
+W - Jump
+A - Move Left
+S - Crouch
+D - Move Right
+U - Light Attack
+I - Medium Attack
+O - Heavy Attack
+
+Player 2:
+Up Arrow - Jump
+Left Arrow - Move Left
+Down Arrow - Crouch
+Right Arrow - Move Right
+B - Light Attack
+N - Medium Attack
+M - Heavy Attack
+
+For both characters, you can dash by double-tapping any direction. 
+
+It's worth noting that Light/Medium/Heavy aren't your only ways to attack. You can pull off some unique attacks if you combine different directions with your standard attack buttons! You can also block attacks by walking backwards, if your opponent keeps throwing punches without quarter.
+
+Shiki Command List:
+
+Quarter Circle Forward (Down, Downright, Forward) + Light Attack -- Flash Sheath - Single Strike
+Quarter Circle Back (Down, Downleft, Back) + Light Attack -- Flash Run - Double Strike
+
+
+"Satsuki" doesn't have any special moves and has lower health, but you'll be powerful enough that you won't even need them!  :  )

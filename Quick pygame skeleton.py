@@ -40,6 +40,16 @@ player_2_controls = [pygame.K_DOWN,
 
 
 
+# This file will be uncommented, as it does not do anything by itself,
+
+# This program existed only as a shell of a program with the bare necessities to draw stuff on the screen so that I could quickly test code
+
+# In it's final form, I gutted it to display certain frames of certain states of the player so that I could program in the hitboxes easier
+
+# Please ignore
+
+
+
 
 
 def main():

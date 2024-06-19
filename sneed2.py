@@ -3,34 +3,19 @@ from inputreaderthing import inputReader, specialMove
 pygame.init()
 pygame.font.init()
 
-le_font = pygame.font.SysFont('Arial', 64)
 
-HITSTOP = pygame.USEREVENT + 1
-hitstop_event = pygame.event.Event(HITSTOP)
-hitboxes = []
 
+# Oh god, I didn't comment this as I wrote it, and I really don't want to comment it now....
+
+
+# Random constants, some used throughout, and some not. This file used to be a standalone file (This was the first project file!) before being relegated to exclusively being
+# a module for the player class
 WIDTH, HEIGHT = 1280, 720
-SCREEN = pygame.display.set_mode((WIDTH/1.5,HEIGHT/1.5))
-WIN = pygame.surface.Surface((WIDTH, HEIGHT))
-FPS = 60
-
-bg_image = pygame.transform.scale(pygame.image.load("wafflehousenight.webp").convert_alpha(), (WIDTH*2,HEIGHT*2))
-bg_rect = bg_image.get_rect()
-bg_rect.centerx = WIN.get_rect().centerx
-bg_rect.bottom = WIN.get_rect().bottom
-
 FLOOR = HEIGHT - 60
-
 SPEED = 8
 FRICTION = 2
 
-player_1_controls = [pygame.K_s,
-                    pygame.K_w,
-                    pygame.K_a,
-                    pygame.K_d,
-                    pygame.K_u,
-                    pygame.K_i,
-                    pygame.K_o]
+
 
 BLACK = (0,0,0)
 YELLOW = (255, 255, 0)
@@ -43,9 +28,10 @@ PURPLE = (125,0,225)
 GREEN = (0,180,0,100)
 GRAVITY = 2
 JUMP = 40
-red = colour.Color(rgb=(1,0,0))
-blue = colour.Color(rgb=(1,0,1))
-color = list(red.range_to(blue, 100))
+
+
+# Attack levels dictionary, this dict stores a bunch of different possible values of different tiers of attack, making it easy to assign the more specific and annoying properities in broader strokes
+# 1 is the weakest with the least impact, and 3 is the strongest with highest stun.
 
 attack_levels_dict = {
 
@@ -69,60 +55,67 @@ attack_levels_dict = {
 
 
 
+# Player class, this is not a class capable of being run on it's own, but it contains the base code common to both character,
 
-
+# It is the engine of the vehicle
 
 
 class Player:
 
     
-
-    def __init__(self, xpos, ypos, controls, stfu=True):
+        # Initializes the ridiculous amount of attributes the player has, many are self explantory controlling stuff such as initial position and such, but I will comment the more bizarre kinds
+    def __init__(self, xpos, ypos, controls):
         self.height = 230
         self.width = 100
         self.controls = controls
         self.inputBuffer = inputReader(controls)
+        #Sets up the height and width of the player, alongside setting up the local instance of the inputreader with you control scheme.
+
         self.absrect = pygame.Rect(xpos,ypos, self.width, self.height)
         self.rect = pygame.Rect(xpos,ypos, self.width, self.height)
+        #While the rect is easy to understand (it is the actual "object" of the player), the abs rect is a version that
+        #is never affected by the rect's changing shape, and since it is constant it is used to position the hurtboxes and hitboxes
+
+
         self.speed = SPEED
-        self.dashFactor = 2.5
+        self.dashFactor = 2.5 #Sets the amount SPEED is multiplied when you dash, so the players can run at different speeds
         self.xvel = 0
-        self.yvel = 0
-        self.IsJump = False
+        self.yvel = 0 # creates the velocity attributes
+        self.IsJump = False # Attribute that determines if you are jumping, I honestly don't know if I still use this, but I'm scared to get rid of it
         self.color = 0, 0, 0
         self.index = 0
-        self.state = Idle()
-        self.direction = 'right'
-        self.moveReader = specialMove
-        self.dashLimit = 2
-        self.amountDashed = 0
-        self.jumpLimit = 3
-        self.jumpCount = 0
-        self.hitboxes = {}
+        self.state = Idle() # Default state for the state machine (more later )
+        self.direction = 'right' #default direct
+        self.moveReader = specialMove # Initializes the move reader
+        self.dashLimit = 2 # Sets a limit on air dashes
+        self.amountDashed = 0 # Tracks amount of airdashes performed
+        self.jumpLimit = 3 # Limits the amount of jumps
+        self.jumpCount = 0 # Guess what this does
+        self.hitboxes = {} 
         self.hurtboxes = []
-        self.defaultHB = Hurtbox(self,160, 00,0,80)
-        self.crouchHB = Hurtbox(self,160, 390/2,0,-20)
-        self.passthrough = False
-        self.pushbox = Pushbox(self, self.width, self.height)
-        self.animIndex = 0
-        self.currentCombo = []
-        self.cancelNow = False
-        self.cancelwindow = 5
-        self.prorationList = []
+        self.defaultHB = Hurtbox(self,160, 00,0,80) # Default HB size so i dont have to keep typing this in for every state
+        self.crouchHB = Hurtbox(self,160, 390/2,0,-20) # Default crouching HB size so i dont have to keep typing this in for every state
+        self.passthrough = False # This doesn't do anything anymore, but the program won't work without it and I'm too lazy to fix it
+        self.pushbox = Pushbox(self, self.width, self.height) # Default PB size (Collision box) so i dont have to keep typing this in for every state
+        self.animIndex = 0 #Animation index, this is used for the character and will be explained in test character
+        self.currentCombo = [] #List of current attacks performed in a combo, used for the cancelling system
+        self.cancelNow = False # Variable that says if current attack can be cancelled
+        self.cancelwindow = 5 # The period you have to cancel moves
+        
         self.alive = True
         
 
         self.floor = ypos
        
         self.isBlock = False
-        self.blockLevel = 'LH'
-        self.stfu = stfu
+        self.blockLevel = 'LH' #Blocking related values
+        
 
-        self.current_health = 11700
+        self.current_health = 11700  #Sets default health values
         self.maximum_health = 11700
-        self.health_bar_length = 440
-        self.health_ratio = self.maximum_health / self.health_bar_length
-
+    
+    # This is a function that mirrors x values depending on the direction the player is facing
+    # It is used for placing hurtboxes and hitboxes, which must be the same on both sides
     def directionFlip(self, xvalue):
         if self.direction == 'left':
             return -xvalue
@@ -132,10 +125,14 @@ class Player:
 
 
     def get_hit(self, hitbox):
-        #print(hitbox.hitstop)
-
-        self.currentCombo.append(hitbox.name)
+        #This entire function runs when you are hit by an attack, and decides how you react
         
+        #First, the attack that hit you is added to your combo counter
+        self.currentCombo.append(hitbox.name)
+    
+
+        #The game checks to see if you are blocking, and if you are blocking at the correct height for the attack
+        #If you are, it puts you in a block state appropriate to how you are standing, if not, you are hit
         if self.isBlock:
             if hitbox.height == 'mid':
                 if 'downleft' in self.inputBuffer.currentInput:
@@ -159,9 +156,10 @@ class Player:
                         self.state = Blockstun(hitbox.kb, self, hitbox.blockstun)
                         return
         
-            
+        #Damage is processed
         self.get_damage(hitbox.damage)
 
+        #The hitbox is checked for special properties (Hard Knockdown and Launch), and if none are found you are hit regularly
         for i in hitbox.properties:
             if 'HK' in i:
                 self.state = KDtumble(0, self)
@@ -180,18 +178,19 @@ class Player:
                     self.state = Hitstun(hitbox.kb, hitbox.ykb,self, hitbox.hitstun)
             
             return hitbox.hitstop
+        
+    # You get damaged lol
     def get_damage(self, damage):
         self.current_health -= damage
 
 
-    def get_health(self,amount):
-        if self.current_health < self.maximum_health:
-            self.current_health += amount
-        if self.current_health >= self.maximum_health:
-            self.current_health = self.maximum_health
+
             
     
-
+    # This is the state machine's heart.
+    # Every frame, the current state (Store as individual classes which dictate the current player behaviour) is read,
+    # and if they meet the criteria to switch states, the state's own transition code it ran while the animation index is reset, and then the state changes
+    # Otherwise, the state continues as usual
     def change_state(self):
         
         new_state = self.state.enter_state(self, self.inputBuffer)
@@ -201,14 +200,15 @@ class Player:
             
             
         else: self.state
-        ##print(self.animIndex)
+        
 
     def movement(self, dx, dy, player, WIN):
-        
+        # Movement function, the players X and Y are changed by the velocity every frame,
+        # and the players are repelled if they enter eachother or the boundaries of the screen
         self.rect.x += dx
         
         self.absrect.centerx = self.rect.centerx
-        ##print(self.rect.bottom < FLOOR)
+        
         if self.passthrough == False:
             if self.rect.colliderect(player.rect):
                 player.rect.x += dx
@@ -240,28 +240,36 @@ class Player:
             self.rect.left = 0
         
         self.absrect.bottom = self.rect.bottom
+        # This seems like a non-sequitur, but this controls the displacement of the hitboxes
         for attack in list(self.hitboxes.keys()):
                 for hitbox in self.hitboxes[attack]:
                     hitbox.timer(self)
+        #moves the hurtboxes to match the players movement
         for hb in self.hurtboxes:
             hb.update_pos(self)
         
-        
+    # Gravity, you are able to pass it a factor to decrease or increase it
     def gravity(self, factor=1):
         self.yvel += GRAVITY * factor
         if self.rect.bottom == FLOOR:
             if self.yvel > 0:
                 self.yvel = 0
+
+    # Move back function, moves the character back in relation to their faced direction
     def move_back(self, vel):
         if self.direction == 'right':
             self.xvel = -vel
         else:
             self.xvel = vel
+
+    # Same, but forward
     def move_forward(self, vel):
         if self.direction == 'right':
             self.xvel = vel
         else:
             self.xvel = -vel
+
+    # Constant damper on velocity, slowing the character down when called
     def do_friction(self, factor=1):
         ##print(self.xvel)
         if self.xvel != 0:
@@ -271,14 +279,14 @@ class Player:
                 self.xvel += FRICTION * factor
         if abs(self.xvel) <= 1:
             self.xvel = 0
-    #def do_pushback(self, player):
-        
+    
+    #  makes the player jump    
     def jump(self, jumpheight):
         self.yvel = -jumpheight
-
+    # Function defined to be further used by the subclasses
     def animController(self, WIN):
         pass
-
+    # Defualt input processing, the subclasses expand this to include more inputs, but these are the basic ones
     def process_inputs(self):
         self.move = self.moveReader.commandReader(self, self.inputBuffer.inputBuffer)
 
@@ -302,7 +310,7 @@ class Player:
             if isinstance(self.state, airDash):
                 if self.state.timer > 8:
                     self.state = test_light_attack(self)
-
+    # Function that automatically passes in the tangle of attributes a hitbox can have, and properly places it in the appropriate dict
     def place_hitbox(self, KEY, xkb, ykb, dur, xoff, yoff, w, h,player, height, level, damage, *properties):
         
         if self.direction == 'right':
@@ -317,14 +325,14 @@ class Player:
                 self.hitboxes[KEY].append(Hitbox(xkb,ykb,dur,-xoff,yoff,w,h,self,height,level,damage, KEY,properties))
             else:
                 self.hitboxes[KEY] = [Hitbox(xkb,ykb,dur,-xoff,yoff,w,h,self,height,level,damage, KEY,properties)]
+    #Main logic loop of the character, ran every frame and dictates what happens when
+    def loop(self, thingy, keys, WIN, joystick=None, controls=None):
 
-    def loop(self, thingy, keys, WIN):
-
-
+        # If you are dead, you permanently enter a death state
         if self.alive and self.current_health <= 0:
             self.alive = False
             self.state = deathFall(20, self)
-        
+        # Reads if any of your attacks have hit your opp, and if they have you get a brief window to cancel into another attack   
         for attack in self.hitboxes:
     
             
@@ -336,10 +344,11 @@ class Player:
         if self.cancelwindow <= 0:
             self.cancelNow = False
         
-        self.inputBuffer.handleInputs(self.direction, keys)
+        # Runs the input buffer functions, advancing and reading inputs every frame
+        self.inputBuffer.handleInputs(self.direction, keys, joystick, controls)
         self.process_inputs(thingy)  
-        ##print(self.state)
-        ##print(self.jumpCount)
+        
+        # Determines the players direction
         if self.rect.centerx - thingy.rect.centerx > 0:
             self.direction = 'left'
         else:
@@ -351,13 +360,17 @@ class Player:
 
         
         
-        
+        #Runs the change state function
         self.change_state()
+
+        #Reads the player's current state and executes whatever the player should be doing in their current state
         self.state.update(self, self.inputBuffer)
         
-
+        #Does all movement
         self.movement(self.xvel,self.yvel, thingy, WIN)
+        #Ticks the cancelWindow counter
         self.cancelwindow -= 1
+        #Updates the animation controller
         self.animController(WIN)
         
 
@@ -366,27 +379,27 @@ class Player:
 
         
         
-            
+    # Simple draw function, draws the sprite with the animDraw() method        
     def draw(self, WIN):
         self.animDraw(WIN)
-        guh = pygame.Surface(self.rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(guh, GRAY, guh.get_rect())
-        WIN.blit(guh, self.rect)
-        pygame.draw.rect(WIN, GRAY, self.rect, 2)
+        # guh = pygame.Surface(self.rect.size, pygame.SRCALPHA)
+        # pygame.draw.rect(guh, GRAY, guh.get_rect())           #Same as hit and hurt box draw functions, but for the gray pushbox that indicates player collision
+        # WIN.blit(guh, self.rect)
+        # pygame.draw.rect(WIN, GRAY, self.rect, 2)
         
 
     
         
-            
-    def drawSelf(self):
-        
-        if self.index < len(color):
-            self.color = pygame.Color(str(color[self.index].hex_l))
-            self.index += 1
-        else:
-            self.index = 0
-            color.reverse()
-        pygame.draw.rect(WIN, self.color, self.rect)
+# The following behemoth is the States section, and it would be pointless to comment every single one,
+
+# In essence, every frame the current active frame class runs it's "update" method which tells the character what it should be currently doing, and also checks
+# if it meets the conditions to switch states, and if it does it performs a transition before returning the new class
+
+#Theres a whole lot of states, but most of them boil down to "How should the player move in this scenario"? "Are they actionable?" "How do they enter different states?", and "Does anything else need to happen right now?"
+
+# This is mostly accomplished through the use of timers (usually created during init), and reading the current inputs. In some cases, like the jump class,
+# We read whether or not the player has released the jump button before allowing another jump to be performed, so to avoid instant double jumps.
+
 
 
 class Idle:
@@ -838,6 +851,17 @@ class dead(hard_KD):
         character.gravity()
 
 
+
+
+# Hitbox, Hurtbox, and Pushbox
+
+# All fundamentally similar objects, they serve as "boxs" that are spawned in relation to the player so determine where attacks can and cannot hit, 
+# To impose the properties of attack unto the opponents,
+# And to avoid overlapping players.
+# They all update themselves every frame to move to a certain distance away from the player as dictate by their offset, and other logic is handled in baseScene iwth collsion handling
+
+
+
 class Hitbox:
     def __init__(self, xknockback, yknockback, duration, xoffset, yoffset, w, h, player, height, level, damage, name,*properties):
         self.player_rect = player.absrect
@@ -887,7 +911,7 @@ class Hurtbox:
         self.rect.center = player.absrect.center
         self.rect.centerx += self.x_off
         self.rect.centery += self.y_off
-        ##print(self.rect.x)
+        
         
     def draw(self, WIN):
         guh = pygame.Surface(self.rect.size, pygame.SRCALPHA)
@@ -905,7 +929,7 @@ class Pushbox:
         self.rect.center = player.rect.center
         self.rect.centerx += self.x_off
         self.rect.centery += self.y_off
-        ##print(self.rect.x)
+       
     def draw(self, WIN):
 
         guh = pygame.Surface(self.rect.size, pygame.SRCALPHA)
@@ -920,78 +944,4 @@ class Pushbox:
 
 
         
-class Thingy:
-    def __init__(self):
-        self.rect = pygame.Rect((WIDTH/2)+400, 700, 50, 100)
-    def guh(self):
-        pygame.draw.rect(WIN, WHITE, self.rect)
 
-def collisionHandling(player, hitboxes):
-    for hitboxes in hitboxes:
-        if player.rect.colliderect(hitboxes) and hitboxes.hasHit == False:
-            player.state = Hitstun(hitboxes.kb, player)
-            hitboxes.hasHit = True
-            pygame.event.post(hitstop_event)
-            return hitboxes.hs_len
-            
-
-def draw(player, hitboxes, thingy):
-    WIN.blit(bg_image,bg_rect)
-    #WIN.fill(WHITE)
-    player.draw(WIN)
-    for hitbox in hitboxes:
-        hitbox.draw(WIN)
-    text_surface = le_font.render(f'{player.state}', False, WHITE)
-    text_surface2 = le_font.render(f'{player.direction}', False, WHITE)
-    thingy.guh()
-    WIN.blit(text_surface,(0,0))
-    WIN.blit(text_surface2,(0,30))
-    SCREEN.blit(pygame.transform.scale(WIN, SCREEN.get_rect().size), (0, 0))
-    pygame.display.flip()
-
-def main():
-    hitstop = False
-    clock = pygame.time.Clock()
-    player = Player((WIDTH/2)-600, WIDTH/2, player_1_controls)
-    thingy = Thingy()
-    hitstopTimer = 0
-    hitstop_len = 0
-    while True:
-        global keys
-        keys = pygame.key.get_pressed()
-        global events
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-                break
-            if event.type == HITSTOP:
-                hitstop = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
-                    #hitboxes.append(Hitbox(20, 10, 1300, (HEIGHT)-200))
-                    ##print('sneed chungos')
-                    pass
-
-        if hitstop == False:
-            hitstop_len = collisionHandling(player, hitboxes)   
-            player.loop(thingy, keys, WIN)
-            for hitbox in hitboxes:
-                hitbox.timer()
-                if hitbox.time >= hitbox.duration:
-                    hitboxes.remove(hitbox)
-        else:
-            if hitstopTimer < hitstop_len:
-                hitstopTimer += 1
-            else:
-                hitstopTimer = 0
-                hitstop = False
-            ##print(hitstop)
-        #sd#print(hitstop_len)
-        draw(player, hitboxes, thingy)
- 
-        clock.tick(FPS)
-
-if __name__ == '__main__':
-    main()
