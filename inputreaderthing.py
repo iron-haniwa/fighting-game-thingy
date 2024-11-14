@@ -20,7 +20,7 @@ PURPLE = (125,0,225)
 GRAVITY = 2
 JUMP = 40
 keys = pygame.key.get_pressed()
-joystick = pygame.joystick.Joystick(0)
+
 
 #This stuff is pretty much just another pygame skeleton, just random stuff I used to get this program up and running standalone, copied from an ancient version of sneed2
 

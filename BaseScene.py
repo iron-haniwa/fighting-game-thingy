@@ -38,7 +38,7 @@ FPS = 60
 # SCREEN is the actual window, while WIN is a surface on which the entire game is drawn before being (potentially) resized to the size of the window.
 # In our case, the window is the perfect size for our laptops, but if you want to increase the game size you can change the multiplied 1 into something larger
 
-controller = pygame.joystick.Joystick(0)
+
 
 
 
@@ -90,18 +90,18 @@ BLACK = (0,0,0)
 #Stages have no gameplay difference (as is the case with any fighting game that isn't called Super Smash Bros), it's just a different background
 stage = random.randint(1,2)
 if stage == 1:
-    sky = pygame.image.load("assets/stage/moonlitSky.png").convert_alpha()
+    sky = pygame.image.load("./assets/stage/moonlitSky.png").convert_alpha()
     sky = pygame.transform.scale(sky, (1280,720))
-    grass = pygame.image.load("assets/stage/grass.png").convert_alpha()
+    grass = pygame.image.load("./assets/stage/grass.png").convert_alpha()
     grass = pygame.transform.scale(grass, (1280,140))
     grass.set_colorkey((255,0,255))
     grass_rect = grass.get_rect()
     grass_rect.centerx = WIN.get_rect().centerx
     grass_rect.bottom = WIN.get_rect().bottom
 if stage == 2:
-    earth = pygame.image.load("assets/stage/earth.png").convert_alpha()
+    earth = pygame.image.load("./assets/stage/earth.png").convert_alpha()
     earth = pygame.transform.scale(earth, (1280,720))
-    tile = pygame.image.load("assets/stage/tilefloor.png").convert_alpha()
+    tile = pygame.image.load("./assets/stage/tilefloor.png").convert_alpha()
     tile = pygame.transform.scale(tile, (1280,140))
     tile_rect = tile.get_rect()
     tile_rect.centerx = WIN.get_rect().centerx
@@ -262,7 +262,6 @@ def main(player1char, player2char): # Main loop, this is where the magic happens
 
     endTimer = 0
     while True:      
-        controls = controller.get_hat(0)
         # Generic Pygame loop stuff, closes the game when you try to close it, also continously reads keyboard input and events
         keys = pygame.key.get_pressed()
         events = pygame.event.get()
@@ -279,7 +278,7 @@ def main(player1char, player2char): # Main loop, this is where the magic happens
             
             # Main logic loop for the players is called, which handles and orders all actions they can take
             player1.loop(player2, keys, WIN) 
-            player2.loop(player1, keys, WIN,  controller, controls)
+            player2.loop(player1, keys, WIN)
             #Calls collision handling, and gets the length of the hitstop if any
             hitstop_len = collisionHandling(player1, player2)
             
